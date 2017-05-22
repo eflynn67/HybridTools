@@ -63,10 +63,6 @@ for i,val in enumerate(PN_models):
 	PN_all_waves.append(PN_models[i][2])
 PN_all_waves = np.array(PN_all_waves)
 ### each PN_all_waves entry contains an array containing arrays with (time,PN_wave) with the PN-wave in complex form.
-#q1_11levs = glob.glob('Data/SimulationAnnex/BBH_SKS_d20_q1.11_sA_0.893_0_0.111_sB_0.891_0_-0.124/Lev*')
-# q1spin0 path Data/SimulationAnnex/q1SpinZero/*/Lev*/rhOverM_Asymptotic_GeometricUnits.h5
-# spin case path Data/SimulationAnnex/BBH_SKS_d20_q1.11_sA_0.893_0_0.111_sB_0.891_0_-0.124/Lev*/rhOverM_Asymptotic_GeometricUnits.h5
-# Mimic Wave path /home/eflynn/src/lscsoft/BH_NS/Data/SimulationAnnex/BBH_SKS_d20_q5_sA_0_0_-0.900_sB_0_0_0/Lev*/rhOverM_Asymptotic_GeometricUnits.h5
 # NOTE: Numerical waves have junk radiation in beginning. This causes problems in the frequency series. Solve this by reading in the numerical metadata
 # for the relaxation time and cutting data according to that. The relaxation time is just the time it takes for the junk to go away.
 num_levs  = glob.glob('Insert Simulation Directory Here /Lev*/rhOverM_Asymptotic_GeometricUnits.h5')
@@ -152,6 +148,7 @@ if __name__ == '__main__':
 			np.savetxt(path_name_data + '_N3_Lev'+str(j+1)+'num_wt_d1_flow70Full.txt',np.transpose([num_z[:], h2_ts[1:]]), delimiter = ' ')
 			#### Note: numerical phase is usually noisey in the beginning. This noise creates a garbage num_z for the first 500 data points or so
 			np.savetxt(path_name_data + '_N3_Lev'+str(j+1)+'num_wf_d1_flow70Full.txt',np.transpose([num_z[:np.argmax(h2_fs)], h2_fs[:np.argmax(h2_fs)]]), delimiter = ' ')
+			#### Below writes a hybrid wave using the parameters for each ij combination
 			'''
 			path_name_hybrid = 'Data/Hybrids/BBH_SKS_d20_q5_sA_0_0_-0.900_sB_0_0_0/Hybrids2/'+ PN_models[i][1]  
                         if not os.path.exists(os.path.dirname(path_name_hybrid)):
