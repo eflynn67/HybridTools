@@ -199,6 +199,18 @@ def hybridize(h1,h2,h1_ts,h2_ts,match_i,match_f,M=200):
 		hybrid = (hybrid_t, hybrid_hp, hybrid_hc)
 		#return(np.max(norm_z),phi,h2_phase_shift,hybrid)
 		return hybrid 
+
+def SItoNinjaTime(x):
+### time conversion (for now): a*M * G/c^3 where M is in solar masses where a is some integer
+	t_conversion = total_mass*(4.92686088e-6)
+	return x/t_conversion
+def SItoNinjah(h):
+### amp conversion: 1M = (1 megaparsec) * c^3/G in solar masses (r is in terms of solar masses)
+###       : 1mpc = 2.086e19
+### the h_conversion is of the form M_tot/1mpc
+	solar_mass_mpc = 2.0896826e19
+	h_conversion = total_mass/solar_mass_mpc
+	return h/h_conversion	
 ##########################################################################################
 ### UNDER CONSTRUCTION: calculates distance between two arbitrary waveforms relative to h1 
 def delta_h(h1,h2):
