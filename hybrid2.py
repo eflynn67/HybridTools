@@ -1,4 +1,3 @@
-import h5py
 import scipy as sci
 import numpy as np
 import scipy.signal as sig
@@ -7,7 +6,7 @@ import matplotlib.pyplot as plt
 import H5Graph 
 from scipy import interpolate as inter
 from pycbc.waveform import get_td_waveform
-
+from hybridmodules import *
 ## This script constructs a simple hybrid model using cross correlation.
 
 
@@ -34,33 +33,6 @@ t_conversion = total_mass*(4.92686088e-6)
 f_low = 50
 sample_rate = 4096*10
 delta_t = 1.0/sample_rate
-
-#### define functions
-### 
-### This is just a more compact version of the Pycbc get time series. 
-def getPN(x,mass1,mass2,f_low,distance,delta_t,sAx,sAy,sAz,sBx,sBy,sBz,inclination):
-	Sph_Harm = 0.6307831305
-	hp, hc = get_td_waveform(approximant = x, mass1=mass1, 
-						mass2=mass2, 
-						f_lower=f_low,
-						distance= distance,
-						delta_t= delta_t,
-						spin1x = sAx,
-						spin1y = sAy,
-						spin1z = sAz,
-						spin2x = sBx,
-						spin2y = sBy,
-						spin2z = sBz,
-						lambda1 = 0,
-						lambda2 = 0,
-						inclination= inclination)
-	
-	new_hp = hp/Sph_Harm
-	new_hc = hc/Sph_Harm
-	PN_wave = new_hp + new_hc*1j
-	times = hp.sample_times
-	shift_times = times - times[0]
-	return (shift_times,PN_wave)
 
 def SItoNinjaTime(x):
 	### time conversion (for now): a*M * G/c^3 where M is in solar masses where a is some integer
