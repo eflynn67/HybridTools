@@ -61,7 +61,7 @@ def getPN(x,mass1,mass2,f_low,distance,delta_t,sAx,sAy,sAz,sBx,sBy,sBz,inclinati
 	times = hp.sample_times
 	shift_times = times - times[0]
 	return (shift_times,PN_wave)
-'''
+
 def SItoNinjaTime(x):
 	### time conversion (for now): a*M * G/c^3 where M is in solar masses where a is some integer
 	t_conversion = total_mass*(4.92686088e-6)
@@ -73,7 +73,6 @@ def SItoNinjah(h):
 	solar_mass_mpc = 2.0896826e19
 	h_conversion = total_mass/solar_mass_mpc
 	return h/h_conversion	
-'''
 
 ############## Find a correlation between the two waveforms
 ### typically len(h2) < len(h1)
