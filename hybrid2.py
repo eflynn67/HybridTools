@@ -17,34 +17,18 @@ q = 5
 #observer distance
 distance = 1
 total_mass = m_1 + m_2
-
 ### this is the 2-2 spin weighted spherical harmonic
 Sph_Harm = 0.6307831305
-
 ### amp conversion: 1M = (1 megaparsec) * c^3/G in solar masses (r is in terms of solar masses)
 ### 		  : 1mpc = 2.086e19
 #### the h_conversion is of the form M_tot/1mpc 
-
 solar_mass_mpc = 2.0896826e19
 h_conversion = total_mass/solar_mass_mpc
 t_conversion = total_mass*(4.92686088e-6)
-
 ####### Define Constants
 f_low = 50
 sample_rate = 4096*10
 delta_t = 1.0/sample_rate
-
-def SItoNinjaTime(x):
-	### time conversion (for now): a*M * G/c^3 where M is in solar masses where a is some integer
-	t_conversion = total_mass*(4.92686088e-6)
-	return x/t_conversion
-def SItoNinjah(h):
-	### amp conversion: 1M = (1 megaparsec) * c^3/G in solar masses (r is in terms of solar masses)
-        ###       : 1mpc = 2.086e19
-	### the h_conversion is of the form M_tot/1mpc
-	solar_mass_mpc = 2.0896826e19
-	h_conversion = total_mass/solar_mass_mpc
-	return h/h_conversion	
 
 ############## Find a correlation between the two waveforms
 ### typically len(h2) < len(h1)
