@@ -15,38 +15,17 @@ from pycbc.waveform import get_td_waveform
 #from pycbc.types import timeseries
 #from pycbc.filter.matchedfilter import match
 from pycbc.types.timeseries import TimeSeries
-#import matplotlib.pyplot as plt
-#m_1 = 7
-#m_2 = 1.4
-#q = 1
-#total_mass = m_1 + m_2
-### amp conversion: 1M = (1 megaparsec) * c^3/G in solar masses (r is in terms of solar masses)
-###               : 1mpc = 2.086e19
-#### the h_conversion is of the form M_tot/1mpc
-
-#solar_mass_mpc = 2.0896826e19
-#h_conversion = total_mass/solar_mass_mpc
-
-### time conversion (for now): a*M * G/c^3 where M is in solar masses where a is some integer
-#t_conversion = total_mass*(4.92686088e-6)
-####### Define Constants
-#G = 6.67384*(10^-11)
-#c = 299792458
-#f_low = 70
-#pi = np.pi
 sample_rate = 4096*10
 delta_t = 1.0/sample_rate
-# feed in single wave data. loop in head script. one is held constant
 
-## def _poolinit() is just a profiler. The profiler outputs .out file which shows the time it takes to run functions in the code.
-#def _poolinit():
-#	global prof
-#	prof = cProfile.Profile()
-#	def finish():
-#		prof.dump_stats('./Profiles/profile-%s.out' % mp.current_process().pid)
-#	mp.util.Finalize(None,finish,exitpriority = 1)
-# Produces 2-2 mode PN waveform. Returns column stacked array hybrid[i][j] i being the times, j being the complex waveform
-#getPN(x,m1,m2,f_low=70,distance=1,delta_t=1.0/(4096.0*10.0),sAx=0.0,sAy=0.0,sAz=0.0,sBx=0.0,sBy=0.0,sBz=0.0,inclination=0.0)
+## def _poolinit() is just a profiler. The profiler outputs .out file which shows the time it takes to run functions in the code. Useful 
+## for profiling the hybrid characterization script. 
+def _poolinit():
+	global prof
+	prof = cProfile.Profile()
+	def finish():
+		prof.dump_stats('./Profiles/profile-%s.out' % mp.current_process().pid)
+	mp.util.Finalize(None,finish,exitpriority = 1)
 
 def getPN(x,m1,m2,f_low,distance,delta_t,sAx,sAy,sAz,sBx,sBy,sBz,inclination):
         Sph_Harm = 0.6307831305
