@@ -128,13 +128,9 @@ plt.plot(num_wave[0],np.real(num_wave[1]))
 plt.show()
 
 ###Select match region
-
-#match_i = 0
-#match_f = -1 
 match_i = np.floor((num_ts[0])/delta_t)
 match_f = np.floor((.3 - num_ts[0])/delta_t)
-#return(w,delta_w,np.amax(norm_z),phi,h2_phase_shift)
-#hybrid_1 = match(PN_wave,num_wave,match_i,match_f,1,200)
+
 hybrid = match(PN_wave,num_wave,match_i,match_f,1,200)
 print 'Phase: ', hybrid[2] 
 print 'Max Normed Match ', hybrid[1]
