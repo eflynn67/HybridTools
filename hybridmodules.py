@@ -3,18 +3,15 @@ import h5py
 import cmath
 import time
 import scipy as sci
-#from scipy.signal.signaltools import _next_regular
 import numpy as np
-#from numpy.fft import fftshift
 import scipy.signal as sig
 import H5Graph
 from scipy import interpolate as inter
 import multiprocessing as mp
 from multiprocessing import Pool
 from pycbc.waveform import get_td_waveform
-#from pycbc.types import timeseries
-#from pycbc.filter.matchedfilter import match
 from pycbc.types.timeseries import TimeSeries
+
 sample_rate = 4096*10
 delta_t = 1.0/sample_rate
 
