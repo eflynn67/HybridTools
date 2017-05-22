@@ -146,7 +146,7 @@ def match(h1,h2,i,f,build,M):
 #### Below is a test application of the functions above
 
 #### Get numerical waveforms using Evan's script h5graph
-data_raw = H5Graph.importH5Data(['./Data/SimulationAnnex/BBH_SKS_d20_q5_sA_0_0_-0.900_sB_0_0_0/Lev2/rhOverM_Asymptotic_GeometricUnits.h5/Extrapolated_N2.dir/Y_l2_m2.dat'])
+data_raw = H5Graph.importH5Data(['InputNumericalDataPathHere/rhOverM_Asymptotic_GeometricUnits.h5/Extrapolated_N2.dir/Y_l2_m2.dat'])
 data = H5Graph.formatData(data_raw)
 num_hp = data[0][0][:,1][100:]*h_conversion
 num_hc = data[0][0][:,2][100:]*h_conversion
