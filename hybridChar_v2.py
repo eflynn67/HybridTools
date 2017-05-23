@@ -16,13 +16,13 @@ from hybridmodules import *
 from functools import partial
 import signal
 import matplotlib.pyplot as plt
+solar_mass_mpc = 2.0896826e19
+h_conversion = total_mass/solar_mass_mpc
+t_conversion = total_mass*(4.92686088e-6)
 q = 5.0
 m_1 = 1.4
 m_2 = 7.0
 total_mass = m_1 + m_2
-solar_mass_mpc = 2.0896826e19
-h_conversion = total_mass/solar_mass_mpc
-t_conversion = total_mass*(4.92686088e-6)
 f_low = 70
 distance = 1
 sample_rate = 4096*10
