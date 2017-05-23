@@ -91,28 +91,14 @@ def match_generator_num(h1,h2,initial,f):
 		raise
 def match_generator_PN(h1,h2,f,delta_t):
         try:
-		num_fs = m_frequency_from_polarizations(np.real(h2),np.imag(h2),delta_t)
-                PN_fs = m_frequency_from_polarizations(np.real(h1),np.imag(h1),delta_t)
-		num_start_f = np.floor(num_fs[500])
-		print num_start_f
-		for i in np.arange(0,len(PN_fs)):
-			if np.floor(PN_fs[i])==num_start_f:
-				start_PN_index = i
-				break
-		match_i =  start_PN_index
-		print match_i
 		match_f = f
                 h1_seg = h1[match_i:match_f]
                 z_fft = sci.signal.fftconvolve(h1,np.conj(h2[::-1]))
                 abs_z_fft = np.abs(z_fft)
                 w = np.argmax(abs_z_fft) - len(h1_seg) + 1
                 delta_w =  w + len(h1_seg)
-		print w , 'w'
-		print delta_w, 'delta w'
                 h1_norm = np.linalg.norm(h1_seg)
                 h2_norm = np.linalg.norm(h2[w:delta_w])
-                print h1_norm, 'h1'
-		print h2_norm, 'h2'
 		norm_z = abs_z_fft/(h1_norm*h2_norm)
                 return np.amax(norm_z)
         except RuntimeWarning:
