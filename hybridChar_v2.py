@@ -133,7 +133,7 @@ if __name__ == '__main__':
 			#N_lev_freq_range.append((best_z[0],freq_range))
 			#### 2-d with best match value and corresponding freq value	
 			#best_z_freq = np.column_stack((best_z[0],freq_range))
-			path_name_data = 'Data/Hybrids/BBH_SKS_d20_q5_sA_0_0_-0.900_sB_0_0_0/Data/' + PN_models[i][1]  
+			path_name_data = 'Set output data directory here /' + PN_models[i][1]  
 			if not os.path.exists(os.path.dirname(path_name_data)):
 				try:
 					os.makedirs(os.path.dirname(path_name_data))
@@ -148,7 +148,7 @@ if __name__ == '__main__':
 			np.savetxt(path_name_data + '_N3_Lev'+str(j+1)+'num_wf_d1_flow70Full.txt',np.transpose([num_z[:np.argmax(h2_fs)], h2_fs[:np.argmax(h2_fs)]]), delimiter = ' ')
 			#### Below writes a hybrid wave using the parameters for each ij combination
 			'''
-			path_name_hybrid = 'Data/Hybrids/BBH_SKS_d20_q5_sA_0_0_-0.900_sB_0_0_0/Hybrids2/'+ PN_models[i][1]  
+			path_name_hybrid = 'Set Hybrid wave output here/'+ PN_models[i][1]  
                         if not os.path.exists(os.path.dirname(path_name_hybrid)):
                                 try:
                                         os.makedirs(os.path.dirname(path_name_hybrid))
