@@ -73,8 +73,6 @@ all_levs = []
 ### empty entry for now. we need to specify a lev
 ### iterate over number of entries in data.
 def formatNum(i):
-	#print add_num_levs[i]
-	#data_ram = hdf5.File(num_levs[i])
 	data_raw = H5Graph.importH5Data([add_num_levs[i]])
 	data = H5Graph.formatData(data_raw)
 	num_hp = data[0][0][:,1][550:]*h_conversion
