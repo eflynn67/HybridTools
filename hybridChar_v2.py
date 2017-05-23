@@ -17,23 +17,23 @@ from functools import partial
 import signal
 import matplotlib.pyplot as plt
 solar_mass_mpc = 2.0896826e19
-h_conversion = total_mass/solar_mass_mpc
+h_conversion = total_mass/solar_mass_mpc ### conversion needed to put SXS waves into PyCBC units
 t_conversion = total_mass*(4.92686088e-6)
-q = 5.0
-m_1 = 1.4
-m_2 = 7.0
+q = 5.0 ### mass ratio
+m_1 = 1.4 ### mass 1
+m_2 = 7.0 ### mass 2 
 total_mass = m_1 + m_2
-f_low = 70
-distance = 1
+f_low = 70 ### lower frequency bound for PN
+distance = 1 ### observer distance
 sample_rate = 4096*10
 delta_t = 1.0/sample_rate
-sAx = 0.0
+sAx = 0.0 ### spins in x,y,z direction for m1 (A) and m2 (B)
 sAy = 0.0
 sAz = 0.0
 sBx = 0.0
 sBy = 0.0
 sBz = -0.9
-inclination = 0.0
+inclination = 0.0 ### angle from the z-axis orthogonal to orbital plane
 PN_names = ['SEOBNRv2','SEOBNRv3','SEOBNRv4']
 PN_models = []
 ## getPN returns (shift_times,new_hp,new_hc) new meaning the 2-2 spherical harmonic is divided out 
