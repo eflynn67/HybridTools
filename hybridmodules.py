@@ -24,7 +24,7 @@ def _poolinit():
 		prof.dump_stats('./Profiles/profile-%s.out' % mp.current_process().pid)
 	mp.util.Finalize(None,finish,exitpriority = 1)
 
-def getPN('name',m1,m2,f_low,distance,delta_t,sAx,sAy,sAz,sBx,sBy,sBz,inclination):
+def getPN(name,m1,m2,f_low,distance,delta_t,sAx,sAy,sAz,sBx,sBy,sBz,inclination):
         Sph_Harm = 0.6307831305
         hp, hc = get_td_waveform(approximant = name, mass1=m1,
                                                 mass2=m2,
