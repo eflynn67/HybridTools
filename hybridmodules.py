@@ -121,7 +121,7 @@ def corrintegral(h1,h2,initial,f):
         delta_w = w + len(h2[match_i:match_f])
         h2p_norm = np.linalg.norm(h2[match_i:match_f])
 	h1p_norm = np.linalg.norm(h1[w:delta_w])
-        norm_z = abs_z/(h1_norm*h1p_norm)
+        norm_z = abs_z/(h1p_norm*h1p_norm)
         return  np.amax(norm_z),w
 ### match function takes in two waveforms with corresponding parameters and can either perform a simple match using function build = 0 (with output 
 ### (w,delta_w,np.amax(norm_z),phi,h2_phase_shift) where w is the match index, delta_w, the match number, the phase angle, and the corresponding phase shift for h2 respectively) or 
