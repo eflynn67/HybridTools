@@ -126,51 +126,51 @@ def corrintegral(h1,h2,initial,f):
 ### match function takes in two waveforms with corresponding parameters and can either perform a simple match using function build = 0 (with output 
 ### (w,delta_w,np.amax(norm_z),phi,h2_phase_shift) where w is the match index, delta_w, the match number, the phase angle, and the corresponding phase shift for h2 respectively) or 
 ### using build = 1 constructs a full hybrid with windowing length M (an integer). Windowing function used: hann function
-def hybridize(h1,h2,h1_ts,h2_ts,match_i,match_f,M=200):
-		z = sig.correlate(h1,np.conj(h2[match_i:match_f]))
-		abs_z = np.abs(z)
-		w = np.argmax(abs_z) - len(h2[match_i:match_f])
-		delta_w = w + len(h2[match_i:match_f])
-		h2_norm = np.linalg.norm(h2[match_i:match_f])
-		h1_norm = np.linalg.norm(h1[w:delta_w])
-		norm_z = abs_z/(h1_norm*h2_norm)
-		phi = np.angle(z[np.argmax(abs_z)])
-		h2_phase_shift = np.exp(1j*phi)*h2
-		h2_tc = h2_ts - h2_ts[0] + (w - match_i)*delta_t
-		off_len = (M-1)/2 + 1
-		on_len = (M+1)/2
-		window = sig.hann(M)
-		##Initialize off and on arrays
-		off_hp = np.zeros(off_len)
-		on_hp = np.zeros(on_len)
-		off_hc = np.zeros(off_len)
-		on_hc = np.zeros(on_len)
-		##Bounds for windowing functions
-		lb= w
-		mid=off_len + w
-		ub = M-1 + w
-		##multiply each off and on section by appropriate window section
-		for i in range(on_len):
-			on_hp[i] = np.real(h2_phase_shift[match_i+i])*window[i]
-		for i in range(off_len):
-			off_hp[i] = np.real(h1[w+i])*window[i+off_len-1]
-		for i in range(on_len):
-			on_hc[i] = np.imag(h2_phase_shift[match_i+i])*window[i]
-		for i in range(off_len):
-			off_hc[i] = np.imag(h1[w+i]*window[i+off_len-1])
-		 ##Next add the on and off sections together
-		mix_hp = on_hp + off_hp
-		mix_hc = on_hc + off_hc
-		h1_hp_split = np.real(h1[:w])
-		h1_hc_split = np.imag(h1[:w])
-		h1_ts_split = h1_ts[:w]
-		hybrid_t = np.concatenate((np.real(h1_ts_split),np.real(h2_tc[match_i:])), axis =0)
-		hybrid_hp = np.concatenate((h1_hp_split,mix_hp,np.real(h2_phase_shift[match_i+off_len:])),axis = 0)
-		hybrid_hc = np.concatenate((h1_hc_split,mix_hc,np.imag(h2_phase_shift[match_i+off_len:])),axis =0)
-		hybrid = (hybrid_t, hybrid_hp, hybrid_hc)
-		#return(np.max(norm_z),phi,h2_phase_shift,hybrid)
-		return hybrid 
-
+def hybridize(h1,h2,h1_ts,h2_ts,match_i,match_f,delta_t,M=200):	
+	h2_seg = h2[match_i:match_f]
+	z = sci.signal.fftconvolve(h1,np.conj(h2_seg[::-1]))
+	abs_z = np.abs(z)
+	w = np.argmax(abs_z) - len(h2_seg)
+	delta_w = w + len(h2_seg)
+	h2_norm = np.linalg.norm(h2_seg)
+	h1_norm = np.linalg.norm(h1[w:delta_w])
+	norm_z = abs_z/(h1_norm*h2_norm)
+	phi = np.angle(z[np.argmax(abs_z)])
+	h2_phase_shift = np.exp(1j*phi)*h2
+	h2_tc = h2_ts - h2_ts[0] + (w - match_i)*delta_t
+	off_len = (M-1)/2 + 1
+	on_len = (M+1)/2
+	window = sig.hann(M)
+	##Initialize off and on arrays
+	off_hp = np.zeros(off_len)
+	on_hp = np.zeros(on_len)
+	off_hc = np.zeros(off_len)
+	on_hc = np.zeros(on_len)
+	##Bounds for windowing functions
+	lb= w
+	mid=off_len + w
+	ub = M-1 + w
+	##multiply each off and on section by appropriate window section
+	for i in range(on_len):
+		on_hp[i] = np.real(h2_phase_shift[match_i+i])*window[i]
+	for i in range(off_len):
+		off_hp[i] = np.real(h1[w+i])*window[i+off_len-1]
+	for i in range(on_len):
+		on_hc[i] = np.imag(h2_phase_shift[match_i+i])*window[i]
+	for i in range(off_len):
+		off_hc[i] = np.imag(h1[w+i]*window[i+off_len-1])
+	 ##Next add the on and off sections together
+	mix_hp = on_hp + off_hp
+	mix_hc = on_hc + off_hc
+	h1_hp_split = np.real(h1[:w])
+	h1_hc_split = np.imag(h1[:w])	
+	h1_ts_split = h1_ts[:w]
+	hybrid_t = np.concatenate((np.real(h1_ts_split),np.real(h2_tc[match_i:])), axis =0)
+	hybrid_hp = np.concatenate((h1_hp_split,mix_hp,np.real(h2_phase_shift[match_i+off_len:])),axis = 0)
+	hybrid_hc = np.concatenate((h1_hc_split,mix_hc,np.imag(h2_phase_shift[match_i+off_len:])),axis =0)
+	hybrid = (hybrid_t, hybrid_hp, hybrid_hc)
+	#return(np.max(norm_z),phi,h2_phase_shift,hybrid)
+	return hybrid 
 def SItoNinjaTime(x):
 ### time conversion (for now): a*M * G/c^3 where M is in solar masses where a is some integer
 	t_conversion = total_mass*(4.92686088e-6)
