@@ -127,7 +127,7 @@ def corrintegral(h1,h2,initial,f):
 ### (w,delta_w,np.amax(norm_z),phi,h2_phase_shift) where w is the match index, delta_w, the match number, the phase angle, and the corresponding phase shift for h2 respectively) or 
 ### using build = 1 constructs a full hybrid with windowing length M (an integer). Windowing function used: hann function
 def hybridize(h1,h2,h1_ts,h2_ts,match_i,match_f,M=200):
-		z = sci.signal.fftconvolve(h1,np.conj(h2[::-1]))
+		z = sig.correlate(h1,np.conj(h2[match_i:match_f]))
 		abs_z = np.abs(z)
 		w = np.argmax(abs_z) - len(h2[match_i:match_f])
 		delta_w = w + len(h2[match_i:match_f])
