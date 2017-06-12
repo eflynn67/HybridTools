@@ -67,17 +67,13 @@ def m_frequency_from_polarizations(hp,hc,delta_t):
 	return freq
 	
 def matchfft(h1,h2):
-	h1p = np.real(h1)
-	h2p = np.real(h2)
-	#h1c = np.imag(h1)
-	#h2c = np.imag(h2)
-	z_fft = sci.signal.fftconvolve(np.conj(h1p),h2p[::-1])
+	z_fft = sci.signal.fftconvolve(h1,np.conj(h2[::-1]))
 	abs_z_fft = np.abs(z_fft)
-	w = np.argmax(abs_z_fft) - len(h2p) + 1
-	delta_w =  w + len(h2p)
-	h2p_norm = np.linalg.norm(h2p)
-	h1p_norm = np.linalg.norm(h1p[w:delta_w])
-	norm_z = abs_z_fft/(h1p_norm*h2p_norm)
+	w = np.argmax(abs_z_fft) - len(h2) + 1
+	delta_w =  w + len(h2)
+	h2_norm = np.linalg.norm(h2)
+	h1_norm = np.linalg.norm(h1[w:delta_w])
+	norm_z = abs_z_fft/(h1_norm*h2_norm)
 	return np.amax(norm_z)
 
 def match_generator_num(h1,h2,initial,f):
@@ -127,7 +123,7 @@ def hybridize(h1,h2,h1_ts,h2_ts,match_i,match_f,delta_t,M=200):
 	h2_seg = h2[match_i:match_f]
 	z = sci.signal.fftconvolve(h1,np.conj(h2_seg[::-1]))
 	abs_z = np.abs(z)
-	w = np.argmax(abs_z) - len(h2_seg)
+	w = np.argmax(abs_z) - len(h2_seg) + 1
 	delta_w = w + len(h2_seg)
 	h2_norm = np.linalg.norm(h2_seg)
 	h1_norm = np.linalg.norm(h1[w:delta_w])
@@ -190,13 +186,12 @@ def delta_h(h1,h2):
 	return norm_diff 
 #def delta_phi():
 ##########################################################################################
-## Bandpass filter will only vary high and low cutoffs at the same time. The filter cutoff
+## Bandpass filter will only vary the high and low cutoffs at the same time. The filter cutoff
 #  currently corresponds to where the middle of the filter is.          
-def match_bpfil(h1,h2,order,sample_rate,cutoff):
+def match_bpfil(h1,h2,order,sample_rate,cutoff,center=250):
         h1p = np.real(h1)
         h2p = np.real(h2)
         nyq = 0.5*sample_rate
-        center = 250
         high = (center + cutoff)/nyq
         low = (center - cutoff)/nyq
         b, a = sig.butter(order,[low,high],btype='bandpass', analog=False)
