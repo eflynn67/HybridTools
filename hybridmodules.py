@@ -12,9 +12,6 @@ from multiprocessing import Pool
 from pycbc.waveform import get_td_waveform
 from pycbc.types.timeseries import TimeSeries
 
-sample_rate = 4096*10
-delta_t = 1.0/sample_rate
-
 ## def _poolinit() is just a profiler. The profiler outputs .out file which shows the time it takes to run functions in the code. Useful 
 ## for profiling the hybrid characterization script. 
 def _poolinit():
