@@ -30,6 +30,14 @@ def tOverM_to_SI(times,total_mass):
         t_conversion = total_mass*(4.92686088e-6)
         return times*t_conversion
 
+def SI_to_rhOverM(polarization,total_mass):
+	solar_mass_mpc = 2.0896826e19
+        h_conversion = solar_mass_mpc/total_mass
+
+def SI_to_rOverM(times,total_mass):
+        t_conversion = total_mass*(4.92686088e-6)
+        return times/t_conversion
+
 def getPN(name,m1,m2,f_low,distance,delta_t,sAx,sAy,sAz,sBx,sBy,sBz,inclination):
         Sph_Harm = 0.6307831305
         hp, hc = get_td_waveform(approximant = name, mass1=m1,
@@ -184,10 +192,27 @@ def delta_h(h1,h2):
                 h1 = np.append(h1,np.zeros(np.abs(len(h2)-len(h1))))
 	norm_diff = np.divide(np.linalg.norm(np.subtract(h1,h2)),np.linalg.norm(h2))
 	return norm_diff 
-#def delta_phi():
-##########################################################################################
+
+def formatNum(,i,start=0):
+	data_raw = H5Graph.importH5Data([add_num_levs[i]])
+	data = H5Graph.formatData(data_raw)
+	num_hp = data[0][0][:,1][550:]*h_conversion
+	num_hc = data[0][0][:,2][550:]*h_conversion
+	num_t = data[0][0][:,0][550:]*t_conversion
+	interpo_hp = sci.interpolate.interp1d(num_t,num_hp, kind = 'linear')
+	interpo_hc = sci.interpolate.interp1d(num_t,num_hc, kind = 'linear')
+##### interpolate the numerical hp and hc with PN timeseries
+	num_ts = np.arange(num_t[0],num_t[-1],delta_t)
+	new_num_hp = interpo_hp(num_ts)
+	new_num_hc = interpo_hc(num_ts)
+#### Cast waves into complex form and take fft of num_wave
+	num_wave = (new_num_hp - new_num_hc*1j)
+	return('Lev'+ str(i),num_ts,num_wave)
+		
+########################################################################################
 ## Bandpass filter will only vary the high and low cutoffs at the same time. The filter cutoff
 #  currently corresponds to where the middle of the filter is.          
+'''
 def match_bpfil(h1,h2,order,sample_rate,cutoff,center=250):
         h1p = np.real(h1)
         h2p = np.real(h2)
@@ -250,3 +275,4 @@ def match_hpfil(h1,h2,order,sample_rate,cutoff):
                 h1p_norm = np.linalg.norm(h1p[w:delta_w])
                 norm_z = abs_z_fft/(h1p_norm*h2p_norm)
                 return np.amax(norm_z)
+'''
