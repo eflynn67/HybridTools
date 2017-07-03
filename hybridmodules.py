@@ -192,7 +192,7 @@ def delta_h(h1,h2):
                 h1 = np.append(h1,np.zeros(np.abs(len(h2)-len(h1))))
 	norm_diff = np.divide(np.linalg.norm(np.subtract(h1,h2)),np.linalg.norm(h2))
 	return norm_diff 
-
+'''
 def formatNum(,i,start=0):
 	data_raw = H5Graph.importH5Data([add_num_levs[i]])
 	data = H5Graph.formatData(data_raw)
@@ -212,7 +212,7 @@ def formatNum(,i,start=0):
 ########################################################################################
 ## Bandpass filter will only vary the high and low cutoffs at the same time. The filter cutoff
 #  currently corresponds to where the middle of the filter is.          
-'''
+
 def match_bpfil(h1,h2,order,sample_rate,cutoff,center=250):
         h1p = np.real(h1)
         h2p = np.real(h2)
