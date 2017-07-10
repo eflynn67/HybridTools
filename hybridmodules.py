@@ -55,10 +55,10 @@ def getPN(name,m1,m2,f_low,distance,delta_t,sAx,sAy,sAz,sBx,sBy,sBz,inclination=
                                                 lambda2 = tidal2,
                                                 inclination= inclination)
 
-        new_hp = hp/Sph_Harm
-        new_hc = hc/Sph_Harm
+        new_hp = np.array(hp/Sph_Harm)
+        new_hc = np.array(hc/Sph_Harm)
         PN_wave = new_hp + new_hc*1j
-        times = hp.sample_times
+        times = np.array(hp.sample_times)
 	shift_times = times - times[0]
 	return (shift_times,PN_wave)
 
