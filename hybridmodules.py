@@ -127,7 +127,7 @@ def corrintegral(h1,h2,initial,f):
 ### match function takes in two waveforms with corresponding parameters and can either perform a simple match using function build = 0 (with output 
 ### (w,delta_w,np.amax(norm_z),phi,h2_phase_shift) where w is the match index, delta_w, the match number, the phase angle, and the corresponding phase shift for h2 respectively) or 
 ### using build = 1 constructs a full hybrid with windowing length M (an integer). Windowing function used: hann function
-def hybridize(h1,h2,h1_ts,h2_ts,match_i,match_f,delta_t,M=200):	
+def hybridize(h1,h2,h1_ts,h2_ts,match_i,match_f,delta_t,M=200,info=0):	
 	h2_seg = h2[match_i:match_f]
 	z = sci.signal.fftconvolve(h1,np.conj(h2_seg[::-1]))
 	abs_z = np.abs(z)
@@ -170,8 +170,12 @@ def hybridize(h1,h2,h1_ts,h2_ts,match_i,match_f,delta_t,M=200):
 	hybrid_hp = np.concatenate((h1_hp_split,mix_hp,np.real(h2_phase_shift[match_i+off_len:])),axis = 0)
 	hybrid_hc = np.concatenate((h1_hc_split,mix_hc,np.imag(h2_phase_shift[match_i+off_len:])),axis =0)
 	hybrid = (hybrid_t, hybrid_hp, hybrid_hc)
-	#return(np.max(norm_z),phi,h2_phase_shift,hybrid)
-	return hybrid 
+	if info == 0:
+		return hybrid
+	if info == 1:
+		return(np.max(norm_z),phi,h2_phase_shift,hybrid)
+	else: 
+		return 'use info = 0 or 1'
 def SItoNinjaTime(x):
 ### time conversion (for now): a*M * G/c^3 where M is in solar masses where a is some integer
 	t_conversion = total_mass*(4.92686088e-6)
