@@ -38,7 +38,7 @@ def SI_to_rOverM(times,total_mass):
         t_conversion = total_mass*(4.92686088e-6)
         return times/t_conversion
 
-def getPN(name,m1,m2,f_low,distance,delta_t,sAx,sAy,sAz,sBx,sBy,sBz,inclination=0,tidal1=0,tidal2=0):
+def getPN(name,m1=10.0,m2=10.0,f_low=50.0,distance=1,delta_t=1.0/4096.0,sAx=0,sAy=0,sAz=0,sBx=0,sBy=0,sBz=0,inclination=0,tidal1=0,tidal2=0):
         Sph_Harm = 0.6307831305
         hp, hc = get_td_waveform(approximant = name, mass1=m1,
                                                 mass2=m2,
