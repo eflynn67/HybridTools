@@ -6,6 +6,7 @@ import scipy as sci
 import numpy as np
 import scipy.signal as sig
 import H5Graph
+import lal
 from scipy import interpolate as inter
 import multiprocessing as mp
 from multiprocessing import Pool
@@ -22,20 +23,21 @@ def _poolinit():
 	mp.util.Finalize(None,finish,exitpriority = 1)
 
 def rhOverM_to_SI(polarization,total_mass):
-        solar_mass_mpc = 2.0896826e19
+        solar_mass_mpc = lal.MRSUN_SI/(1e6*lal.PC_SI)
         h_conversion = total_mass/solar_mass_mpc
         return polarization*h_conversion
 
 def tOverM_to_SI(times,total_mass):
-        t_conversion = total_mass*(4.92686088e-6)
+        t_conversion = total_mass*lal.MTSUN_SI
         return times*t_conversion
 
 def SI_to_rhOverM(polarization,total_mass):
-	solar_mass_mpc = 2.0896826e19
+	solar_mass_mpc = lal.MRSUN_SI/(1e6*lal.PC_SI)
         h_conversion = solar_mass_mpc/total_mass
+        return polarization*h_conversion
 
 def SI_to_rOverM(times,total_mass):
-        t_conversion = total_mass*(4.92686088e-6)
+        t_conversion = total_mass*lal.MTSUN_SI
         return times/t_conversion
 
 def getPN(name,m1=10.0,m2=10.0,f_low=50.0,distance=1,delta_t=1.0/4096.0,sAx=0,sAy=0,sAz=0,sBx=0,sBy=0,sBz=0,inclination=0,tidal1=0,tidal2=0):
@@ -99,11 +101,13 @@ def match_generator_num(h1,h2,initial,f):
         	return np.amax(norm_z)
 	except RuntimeWarning:
 		raise
-def match_generator_PN(h1,h2,f,delta_t):
-        try:
-		match_f = f
+'''
+def match_generator_PN(h1,h2,initial,f):
+        if len(h1) > len(h2):
+                match_i = initial 
+		match_f = f - len(h2)
                 h1_seg = h1[match_i:match_f]
-                z_fft = sci.signal.fftconvolve(h1,np.conj(h2[::-1]))
+                z_fft = sci.signal.fftconvolve(h1_seg,np.conj(h2[::-1]))
                 abs_z_fft = np.abs(z_fft)
                 w = np.argmax(abs_z_fft) - len(h1_seg) + 1
                 delta_w =  w + len(h1_seg)
@@ -111,8 +115,21 @@ def match_generator_PN(h1,h2,f,delta_t):
                 h2_norm = np.linalg.norm(h2[w:delta_w])
 		norm_z = abs_z_fft/(h1_norm*h2_norm)
                 return np.amax(norm_z)
-        except RuntimeWarning:
-                raise
+        elif  len(h1) <= len(h2):
+                match_i = initial
+                match_f = f - len(h2)
+                h1_seg = h1[match_i:match_f]
+                z_fft = sci.signal.fftconvolve(h1_seg,np.conj(h2[::-1]))
+                abs_z_fft = np.abs(z_fft)
+                w = np.argmax(abs_z_fft) - len(h1_seg) + 1
+                delta_w =  w + len(h1_seg)
+                h1_norm = np.linalg.norm(h1_seg)
+                h2_norm = np.linalg.norm(h2[w:delta_w])
+                norm_z = abs_z_fft/(h1_norm*h2_norm)
+                return np.amax(norm_z)
+        else:
+                return 'error'
+'''
 def corrintegral(h1,h2,initial,f):
 	match_i = initial
         match_f = f
@@ -127,7 +144,7 @@ def corrintegral(h1,h2,initial,f):
 ### match function takes in two waveforms with corresponding parameters and can either perform a simple match using function build = 0 (with output 
 ### (w,delta_w,np.amax(norm_z),phi,h2_phase_shift) where w is the match index, delta_w, the match number, the phase angle, and the corresponding phase shift for h2 respectively) or 
 ### using build = 1 constructs a full hybrid with windowing length M (an integer). Windowing function used: hann function
-def hybridize(h1,h2,h1_ts,h2_ts,match_i,match_f,delta_t,M=200,info=0):	
+def hybridize(h1,h1_ts,h2,h2_ts,match_i,match_f,delta_t=1/4096.0,M=200,info=0):	
 	h2_seg = h2[match_i:match_f]
 	z = sci.signal.fftconvolve(h1,np.conj(h2_seg[::-1]))
 	abs_z = np.abs(z)
@@ -173,22 +190,82 @@ def hybridize(h1,h2,h1_ts,h2_ts,match_i,match_f,delta_t,M=200,info=0):
 	if info == 0:
 		return hybrid
 	if info == 1:
-		return(np.max(norm_z),phi,h2_phase_shift,hybrid)
+		return(np.max(norm_z),phi,h2_phase_shift,h2_tc,hybrid)
 	else: 
 		return 'use info = 0 or 1'
-def SItoNinjaTime(x):
-### time conversion (for now): a*M * G/c^3 where M is in solar masses where a is some integer
-	t_conversion = total_mass*(4.92686088e-6)
-	return x/t_conversion
-def SItoNinjah(h):
-### amp conversion: 1M = (1 megaparsec) * c^3/G in solar masses (r is in terms of solar masses)
-###       : 1mpc = 2.086e19
-### the h_conversion is of the form M_tot/1mpc
-	solar_mass_mpc = 2.0896826e19
-	h_conversion = total_mass/solar_mass_mpc
-	return h/h_conversion	
-##########################################################################################
-### UNDER CONSTRUCTION: calculates distance between two arbitrary waveforms relative to h1 
+
+'''
+def getFormatSXSData(filepath,total_m,delta_t=1.0/4096.0):
+        num = h5py.File(filepath, 'r')
+### We only care about 2-2 mode for now.
+        ht = num['Extrapolated_N4.dir']['Y_l2_m2.dat'][:,0][500:]
+        hre = num['Extrapolated_N4.dir']['Y_l2_m2.dat'][:,1][500:]
+        him = num['Extrapolated_N4.dir']['Y_l2_m2.dat'][:,2][500:]
+        ht_SI = hy.tOverM_to_SI(ht,total_m)
+        hre_SI = hy.rhOverM_to_SI(hre,total_m)
+        him_SI = hy.rhOverM_to_SI(him,total_m)
+        lev = re.search('Lev.', filepath).group(0)
+        interpo_hre = sci.interpolate.interp1d(ht_SI,hre_SI, kind = 'linear')
+        interpo_him = sci.interpolate.interp1d(ht_SI,him_SI, kind = 'linear')
+##### interpolate the numerical hp and hc with PN timeseries
+        hts = np.arange(ht_SI[0],ht_SI[-1],delta_t)
+        #num_t_zeros = np.concatenate((num_ts,np.zeros(np.absolute(len(PN_tc)-len(num_t)))),axis = 0)
+        new_hre = interpo_hre(hts)
+        new_him = interpo_him(hts)
+#### Cast waves into complex form and take fft of num_wave
+        num.close()
+        return (lev,hts,num_wave)
+
+#### writes a given hybrid to a format 1 h5 file and writes it to disk 
+def writeHybridtoSplineH5():
+    with h5py.File(path_name_data+name+'_'+sim_name,'w') as fd:
+                                mchirp, eta = pnutils.mass1_mass2_to_mchirp_eta(mass1, mass2)
+                                hashtag = hashlib.md5()
+                                hashtag.update(fd.attrs['name'])
+                                fd.attrs.create('hashtag', hashtag.digest())
+                                fd.attrs.create('Read_Group', 'Flynn')
+                                fd.attrs.create('name', 'Hybrid:B0:%s'%simname)
+                                fd.attrs.create('f_lower_at_1MSUN', f_low_M)
+                                fd.attrs.create('eta', eta)
+                                fd.attrs.create('Name of Simulation', num_waves[0])
+                                fd.attrs.create('spin1x', s1x)
+                                fd.attrs.create('spin1y', s1y)
+                                fd.attrs.create('spin1z', s1z)
+                                fd.attrs.create('spin2x', s2x)
+                                fd.attrs.create('spin2y', s2y)
+                                fd.attrs.create('spin2z', s2z)
+                                fd.attrs.create('LNhatx', LNhatx)
+                                fd.attrs.create('LNhaty', LNhaty)
+                                fd.attrs.create('LNhatz', LNhatz)
+                                fd.attrs.create('nhatx', n_hatx)
+                                fd.attrs.create('nhaty', n_haty)
+                                fd.attrs.create('nhatz', n_hatz)
+                                fd.attrs.create('coa_phase', coa_phase)
+                                fd.attrs.create('mass1', m_1)
+                                fd.attrs.create('mass2', m_2)            
+                                gramp = fd.create_group('amp_l2_m2')
+                                grphase = fd.create_group('phase_l2_m2')
+                                times = hybridPN_Num[0]
+                                native_delta_t = delta_t
+                                hplus = hybridPN_Num[1]
+                                hcross = hybridPN_Num[2]
+                                massMpc = total_mass*solar_mass_mpc
+                                hplusMpc  = pycbc.types.TimeSeries(hplus/massMpc, delta_t=delta_t)
+                                hcrossMpc = pycbc.types.TimeSeries(hcross/massMpc, delta_t=delta_t)
+                                times_M = times / (lal.MTSUN_SI * total_mass)
+                                HlmAmp   = wfutils.amplitude_from_polarizations(hplusMpc,
+                                        hcrossMpc).data
+                                HlmPhase = wfutils.phase_from_polarizations(hplusMpc, hcrossMpc).data
+                        #       if l!=2 or abs(m)!=2:
+                        #           HlmAmp = np.zeros(len(HlmAmp))
+                        #           HlmPhase = np.zeros(len(HlmPhase))
+
+                                sAmph = romspline.ReducedOrderSpline(times_M, HlmAmp,rel=True ,verbose=False)
+                                sPhaseh = romspline.ReducedOrderSpline(times_M, HlmPhase, rel=True,verbose=False)
+                                sAmph.write(gramp)
+                                sPhaseh.write(grphase)
+
+'''
 def delta_h(h1,h2):
         if len(h1) > len(h2):
                 h2 = np.append(h2,np.zeros(np.abs(len(h2)-len(h1))))
@@ -196,23 +273,8 @@ def delta_h(h1,h2):
                 h1 = np.append(h1,np.zeros(np.abs(len(h2)-len(h1))))
 	norm_diff = np.divide(np.linalg.norm(np.subtract(h1,h2)),np.linalg.norm(h2))
 	return norm_diff 
-'''
-def formatNum(,i,start=0):
-	data_raw = H5Graph.importH5Data([add_num_levs[i]])
-	data = H5Graph.formatData(data_raw)
-	num_hp = data[0][0][:,1][550:]*h_conversion
-	num_hc = data[0][0][:,2][550:]*h_conversion
-	num_t = data[0][0][:,0][550:]*t_conversion
-	interpo_hp = sci.interpolate.interp1d(num_t,num_hp, kind = 'linear')
-	interpo_hc = sci.interpolate.interp1d(num_t,num_hc, kind = 'linear')
-##### interpolate the numerical hp and hc with PN timeseries
-	num_ts = np.arange(num_t[0],num_t[-1],delta_t)
-	new_num_hp = interpo_hp(num_ts)
-	new_num_hc = interpo_hc(num_ts)
-#### Cast waves into complex form and take fft of num_wave
-	num_wave = (new_num_hp - new_num_hc*1j)
-	return('Lev'+ str(i),num_ts,num_wave)
-		
+'''		
+
 ########################################################################################
 ## Bandpass filter will only vary the high and low cutoffs at the same time. The filter cutoff
 #  currently corresponds to where the middle of the filter is.          
