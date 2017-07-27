@@ -190,20 +190,19 @@ def hybridize(h1,h1_ts,h2,h2_ts,match_i,match_f,delta_t=1/4096.0,M=200,info=0):
 	if info == 0:
 		return hybrid
 	if info == 1:
-		return(np.max(norm_z),phi,h2_phase_shift,h2_tc,hybrid)
+		return(np.max(norm_z),w,phi,h2_phase_shift,h2_tc,hybrid)
 	else: 
 		return 'use info = 0 or 1'
 
-'''
 def getFormatSXSData(filepath,total_m,delta_t=1.0/4096.0):
         num = h5py.File(filepath, 'r')
 ### We only care about 2-2 mode for now.
         ht = num['Extrapolated_N4.dir']['Y_l2_m2.dat'][:,0][500:]
         hre = num['Extrapolated_N4.dir']['Y_l2_m2.dat'][:,1][500:]
         him = num['Extrapolated_N4.dir']['Y_l2_m2.dat'][:,2][500:]
-        ht_SI = hy.tOverM_to_SI(ht,total_m)
-        hre_SI = hy.rhOverM_to_SI(hre,total_m)
-        him_SI = hy.rhOverM_to_SI(him,total_m)
+        ht_SI = tOverM_to_SI(ht,total_m)
+        hre_SI = rhOverM_to_SI(hre,total_m)
+        him_SI = rhOverM_to_SI(him,total_m)
         lev = re.search('Lev.', filepath).group(0)
         interpo_hre = sci.interpolate.interp1d(ht_SI,hre_SI, kind = 'linear')
         interpo_him = sci.interpolate.interp1d(ht_SI,him_SI, kind = 'linear')
@@ -216,6 +215,7 @@ def getFormatSXSData(filepath,total_m,delta_t=1.0/4096.0):
         num.close()
         return (lev,hts,num_wave)
 
+'''
 #### writes a given hybrid to a format 1 h5 file and writes it to disk 
 def writeHybridtoSplineH5():
     with h5py.File(path_name_data+name+'_'+sim_name,'w') as fd:

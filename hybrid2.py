@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import H5Graph 
 from scipy import interpolate as inter
 from pycbc.waveform import get_td_waveform
-from hybridmodules import *
+import hybridmodules import as hy
 ## This script constructs a simple hybrid model using cross correlation.
 
 
@@ -101,7 +101,7 @@ def match(h1,h2,i,f,build,M):
 #### Below is a test application of the functions above
 
 #### Get numerical waveforms using Evan's script h5graph
-data_raw = H5Graph.importH5Data(['InputNumericalDataPathHere/rhOverM_Asymptotic_GeometricUnits.h5/Extrapolated_N2.dir/Y_l2_m2.dat'])
+data_raw = H5Graph.importH5Data(['../BH_NS/Data/SimulationAnnex/BBH_SKS_d20_q5_sA_0_0_-0.900_sB_0_0_0/Lev3/rhOverM_Asymptotic_GeometricUnits.h5/Extrapolated_N2.dir/Y_l2_m2.dat'])
 data = H5Graph.formatData(data_raw)
 num_hp = data[0][0][:,1][100:]*h_conversion
 num_hc = data[0][0][:,2][100:]*h_conversion
@@ -120,9 +120,9 @@ num_complex = new_num_hp - new_num_hc*1j
 #######Now put the waves into complex form
 ##### Note: Depending on the spherical harmonic, m=-2 and m=2 for example are complex conjugates.
 ##So when constructing the complex form the m=-2 mode requires a + and m=2 requires a -
-'''
+
 num_wave = (num_ts,num_complex)
-PN_wave = getPN("TaylorT4",m_1,m_2,f_low,distance=1,delta_t=delta_t,sAx=0.0,sAy=0.0,sAz=0.0,sBx=0.0,sBy=0.0,sBz=0.0,inclination=0.0)
+PN_wave = hy.getPN('SEOBNRv3',m1=m_1,m2=m_2,f_low=70.0,distance=1,delta_t=delta_t,sAx=0,sAy=0,sAz=0,sBx=0,sBy=0,sBz=-0.9,inclination=0,tidal1=0,tidal2=0) 
 plt.plot(PN_wave[0],np.real(PN_wave[1]))
 plt.plot(num_wave[0],np.real(num_wave[1]))
 plt.show()
@@ -131,15 +131,17 @@ plt.show()
 match_i = np.floor((num_ts[0])/delta_t)
 match_f = np.floor((.3 - num_ts[0])/delta_t)
 
-hybrid = match(PN_wave,num_wave,match_i,match_f,1,200)
-print 'Phase: ', hybrid[2] 
-print 'Max Normed Match ', hybrid[1]
+hybrid = hy.hybridize(PN_wave[1],PN_wave[0],num_wave[1],num_wave[0],match_i,match_f,delta_t=1/4096.0,M=200,info=1)
+return(np.max(norm_z),phi,h2_phase_shift,h2_tc,hybrid)
+
+print 'Phase: ', hybrid[1] 
+print 'Max Normed Match ', hybrid[0]
 
 #### Wave-plots
 ## hp
-plt.plot(PN_wave[0],PN_wave[1],label='SEOBNRv2')
-plt.plot(hybrid[3],np.real(hybrid[4]),label='Numerical Wave')
-#plt.plot(PN_wave[0][match[0]:match[1]],PN_wave[1][match[0]:match[1]],label='Overlap Area')
+plt.plot(PN_wave[0],PN_wave[1],label='SEOBNRv3')
+plt.plot(hybrid[4][0],np.real(hybrid[4[1]]),label='Numerical Wave')
+plt.plot(PN_wave[0][match[0]:match[1]],PN_wave[1][match[0]:match[1]],label='Overlap Area')
 plt.legend()
 plt.xlabel('Time (Seconds)')
 plt.ylabel('h (Strain)')
@@ -152,6 +154,7 @@ pylab.xlabel('Time (Seconds)')
 pylab.ylabel('h (Strain)')
 pylab.show()
 
+'''
 ## hybrid plot
 plt.plot(hybrid[0][0],hybrid[0][1])
 plt.show()
