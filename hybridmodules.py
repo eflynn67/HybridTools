@@ -7,6 +7,7 @@ import numpy as np
 import scipy.signal as sig
 import H5Graph
 import lal
+import re
 from scipy import interpolate as inter
 import multiprocessing as mp
 from multiprocessing import Pool
@@ -155,7 +156,8 @@ def hybridize(h1,h1_ts,h2,h2_ts,match_i,match_f,delta_t=1/4096.0,M=200,info=0):
 	norm_z = abs_z/(h1_norm*h2_norm)
 	phi = np.angle(z[np.argmax(abs_z)])
 	h2_phase_shift = np.exp(1j*phi)*h2
-	h2_tc = h2_ts - h2_ts[0] + (w - match_i)*delta_t
+	shift_time  = (w - match_i)*delta_t
+        h2_tc = h2_ts - h2_ts[0] + shift_time
 	off_len = (M-1)/2 + 1
 	on_len = (M+1)/2
 	window = sig.hann(M)
@@ -190,20 +192,22 @@ def hybridize(h1,h1_ts,h2,h2_ts,match_i,match_f,delta_t=1/4096.0,M=200,info=0):
 	if info == 0:
 		return hybrid
 	if info == 1:
-		return(np.max(norm_z),w,phi,h2_phase_shift,h2_tc,hybrid)
+		return(np.max(norm_z),w,phi,h2_phase_shift,h2_tc,hybrid,h2_tc)
 	else: 
 		return 'use info = 0 or 1'
 
-def getFormatSXSData(filepath,total_m,delta_t=1.0/4096.0):
+def getFormatSXSData(filepath,total_m,delta_t=1.0/4096.0,l=2,m=2,N=4):
         num = h5py.File(filepath, 'r')
 ### We only care about 2-2 mode for now.
-        ht = num['Extrapolated_N4.dir']['Y_l2_m2.dat'][:,0][500:]
-        hre = num['Extrapolated_N4.dir']['Y_l2_m2.dat'][:,1][500:]
-        him = num['Extrapolated_N4.dir']['Y_l2_m2.dat'][:,2][500:]
+        harmonics = 'Y_l%d_m%d.dat' %(l,m)
+        order = 'Extrapolated_N%d.dir'%N
+        ht = num[order][harmonics][:,0][500:]
+        hre = num[order][harmonics][:,1][500:]
+        him = num[order][harmonics][:,2][500:]
         ht_SI = tOverM_to_SI(ht,total_m)
         hre_SI = rhOverM_to_SI(hre,total_m)
         him_SI = rhOverM_to_SI(him,total_m)
-        lev = re.search('Lev.', filepath).group(0)
+        sim_name = re.search('/BBH(.+?)/L(.+?)/',filepath).group(0) 
         interpo_hre = sci.interpolate.interp1d(ht_SI,hre_SI, kind = 'linear')
         interpo_him = sci.interpolate.interp1d(ht_SI,him_SI, kind = 'linear')
 ##### interpolate the numerical hp and hc with PN timeseries
@@ -211,9 +215,10 @@ def getFormatSXSData(filepath,total_m,delta_t=1.0/4096.0):
         #num_t_zeros = np.concatenate((num_ts,np.zeros(np.absolute(len(PN_tc)-len(num_t)))),axis = 0)
         new_hre = interpo_hre(hts)
         new_him = interpo_him(hts)
+        num_wave = new_hre - 1j*new_him
 #### Cast waves into complex form and take fft of num_wave
         num.close()
-        return (lev,hts,num_wave)
+        return (sim_name,hts,num_wave)
 
 '''
 #### writes a given hybrid to a format 1 h5 file and writes it to disk 
