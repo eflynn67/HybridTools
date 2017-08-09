@@ -24,8 +24,8 @@ def _poolinit():
 	mp.util.Finalize(None,finish,exitpriority = 1)
 
 def rhOverM_to_SI(polarization,total_mass):
-        solar_mass_mpc = lal.MRSUN_SI/(1e6*lal.PC_SI)
-        h_conversion = total_mass/solar_mass_mpc
+        solar_mass_mpc = 1.0/(1.0e6 * lal.PC_SI/lal.MRSUN_SI) 
+        h_conversion = total_mass*solar_mass_mpc
         return polarization*h_conversion
 
 def tOverM_to_SI(times,total_mass):
@@ -87,10 +87,10 @@ def matchfft(h1,h2):
 	norm_z = abs_z_fft/(h1_norm*h2_norm)
 	return np.amax(norm_z)
 
-def match_generator_num(h1,h2,initial,f):
+def match_generator_num(h1,h2,ip2,fp2):
 	try:	
-		match_i = initial
-        	match_f = f
+		match_i = ip2
+        	match_f = fp2
         	h2_seg = h2[match_i:match_f]
 		z_fft = sci.signal.fftconvolve(h1,np.conj(h2_seg[::-1]))
         	abs_z_fft = np.abs(z_fft)
@@ -102,11 +102,12 @@ def match_generator_num(h1,h2,initial,f):
         	return np.amax(norm_z)
 	except RuntimeWarning:
 		raise
-'''
-def match_generator_PN(h1,h2,initial,f):
+##### Needs debugging
+def match_generator_PN(h1,h2,ip1,fp1):
         if len(h1) > len(h2):
-                match_i = initial 
-		match_f = f - len(h2)
+                print'h1>h2'
+                match_i = ip1 
+		match_f = fp1
                 h1_seg = h1[match_i:match_f]
                 z_fft = sci.signal.fftconvolve(h1_seg,np.conj(h2[::-1]))
                 abs_z_fft = np.abs(z_fft)
@@ -117,20 +118,21 @@ def match_generator_PN(h1,h2,initial,f):
 		norm_z = abs_z_fft/(h1_norm*h2_norm)
                 return np.amax(norm_z)
         elif  len(h1) <= len(h2):
-                match_i = initial
-                match_f = f - len(h2)
-                h1_seg = h1[match_i:match_f]
-                z_fft = sci.signal.fftconvolve(h1_seg,np.conj(h2[::-1]))
+                print 'h1<h2'
+                match_i = ip1
+                match_f = fp1
+                h2_seg = h2[match_i:match_f]
+                z_fft = sci.signal.fftconvolve(h2_seg,np.conj(h1[::-1]))
                 abs_z_fft = np.abs(z_fft)
-                w = np.argmax(abs_z_fft) - len(h1_seg) + 1
-                delta_w =  w + len(h1_seg)
-                h1_norm = np.linalg.norm(h1_seg)
-                h2_norm = np.linalg.norm(h2[w:delta_w])
+                w = np.argmax(abs_z_fft) - len(h1) + 1
+                delta_w =  w + len(h1)
+                h2_norm = np.linalg.norm(h2_seg)
+                h1_norm = np.linalg.norm(h1[w:delta_w])
                 norm_z = abs_z_fft/(h1_norm*h2_norm)
                 return np.amax(norm_z)
         else:
                 return 'error'
-'''
+
 def corrintegral(h1,h2,initial,f):
 	match_i = initial
         match_f = f
@@ -192,7 +194,7 @@ def hybridize(h1,h1_ts,h2,h2_ts,match_i,match_f,delta_t=1/4096.0,M=200,info=0):
 	if info == 0:
 		return hybrid
 	if info == 1:
-		return(np.max(norm_z),w,phi,h2_phase_shift,h2_tc,hybrid,h2_tc)
+		return(np.max(norm_z),w,phi,h2_phase_shift,h2_tc,hybrid,h2_tc[0])
 	else: 
 		return 'use info = 0 or 1'
 
@@ -219,8 +221,65 @@ def getFormatSXSData(filepath,total_m,delta_t=1.0/4096.0,l=2,m=2,N=4):
 #### Cast waves into complex form and take fft of num_wave
         num.close()
         return (sim_name,hts,num_wave)
-
 '''
+def iter_hybridize_write(h1,h1_ts,h2,h2_ts,match_i,delta_t,M):
+    hybridPN_Num = hybridize(h1,h1_ts,h2,h2_ts,match_i=match_i,match_f=l,delta_t=delta_t,M=300,info=1)
+    shift_times.append(hybridPN_Num[6])
+    hh_freqs.append(h1_fs[hybridPN_Num[1]])
+    h5file= path_name_data+name+'_'+sim_name+'.h5'
+    f_low_M = f_low * (lal.TWOPI * total_mass * lal.MTSUN_SI)
+    with h5py.File(path_name_data+sim_hybrid_name+'_'+approx+'fp2_'+str(l)+'.h5','w') as fd:
+        mchirp, eta = pnutils.mass1_mass2_to_mchirp_eta(m_1, m_2)
+        hashtag = hashlib.md5()
+        fd.attrs.create('type', 'Hybrid:%s'%type)
+        hashtag.update(fd.attrs['type'])
+        fd.attrs.create('hashtag', hashtag.digest())
+        fd.attrs.create('Read_Group', 'Flynn')
+        fd.attrs.create('approx', approx)
+        fd.attrs.create('sim_name', sim_name)
+        fd.attrs.create('f_lower_at_1MSUN', f_low_M)
+        fd.attrs.create('eta', eta)
+        fd.attrs.create('spin1x', s1x)
+        fd.attrs.create('spin1y', s1y)
+        fd.attrs.create('spin1z', s1z)
+        fd.attrs.create('spin2x', s2x)
+        fd.attrs.create('spin2y', s2y)
+        fd.attrs.create('spin2z', s2z)
+        fd.attrs.create('LNhatx', LNhatx)
+        fd.attrs.create('LNhaty', LNhaty)
+        fd.attrs.create('LNhatz', LNhatz)
+        fd.attrs.create('nhatx', n_hatx)
+        fd.attrs.create('nhaty', n_haty)
+        fd.attrs.create('nhatz', n_hatz)
+        fd.attrs.create('coa_phase', coa_phase)
+        fd.attrs.create('mass1', m_1)
+        fd.attrs.create('mass2', m_2)
+        fd.attrs.create('lambda1',tidal_1)
+        fd.attrs.create('lambda2',tidal_2)
+        fd.attrs.create('PN_fp2', len(h1))
+        fd.attrs.create('Num_begin_window_index',0 )
+        #fd.attrs.create('check_match',hybridPN_Num[0])
+        gramp = fd.create_group('amp_l2_m2')
+        grphase = fd.create_group('phase_l2_m2')
+        times = hybridPN_Num[5][0]
+        hplus = hybridPN_Num[5][1]
+        hcross = hybridPN_Num[5][2]
+        massMpc = total_mass*solar_mass_mpc
+        hplusMpc  = pycbc.types.TimeSeries(hplus/massMpc, delta_t=delta_t)
+        hcrossMpc = pycbc.types.TimeSeries(hcross/massMpc, delta_t=delta_t)
+        times_M = times / (lal.MTSUN_SI * total_mass)
+        HlmAmp = wfutils.amplitude_from_polarizations(hplusMpc,hcrossMpc).data
+        HlmPhase = wfutils.phase_from_polarizations(hplusMpc, hcrossMpc).data
+        sAmph = romspline.ReducedOrderSpline(times_M, HlmAmp,rel=True ,verbose=False)
+        sPhaseh = romspline.ReducedOrderSpline(times_M, HlmPhase, rel=True,verbose=False)
+        sAmph.write(gramp)
+        sPhaseh.write(grphase)
+        fd.close()
+    with h5py.File(path_name_data+'HybridChars.h5','a') as fd:
+        fd.create_dataset('shift_times',data=shift_times)
+        fd.create_dataset('hybridize_freq',data=hh_freqs)
+        fd.close()
+
 #### writes a given hybrid to a format 1 h5 file and writes it to disk 
 def writeHybridtoSplineH5():
     with h5py.File(path_name_data+name+'_'+sim_name,'w') as fd:
