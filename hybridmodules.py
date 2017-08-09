@@ -105,7 +105,6 @@ def match_generator_num(h1,h2,ip2,fp2):
 ##### Needs debugging
 def match_generator_PN(h1,h2,ip1,fp1):
         if len(h1) > len(h2):
-                print'h1>h2'
                 match_i = ip1 
 		match_f = fp1
                 h1_seg = h1[match_i:match_f]
@@ -118,7 +117,6 @@ def match_generator_PN(h1,h2,ip1,fp1):
 		norm_z = abs_z_fft/(h1_norm*h2_norm)
                 return np.amax(norm_z)
         elif  len(h1) <= len(h2):
-                print 'h1<h2'
                 match_i = ip1
                 match_f = fp1
                 h2_seg = h2[match_i:match_f]
