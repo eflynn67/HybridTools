@@ -92,7 +92,7 @@ if __name__ == '__main__':
                         best_numz_indices = []
                         best_PNz_indices = []
                         sim_name = num_waves[j][0]
-                        path_name_data = 'HybridAnnex/'+sim_name+approx+'/'
+                        path_name_data = 'HybridAnnex/'+type+sim_name+approx+'/'
                         h2 = num_waves[j][2]
                         h2_ts = num_waves[j][1]
                         h2_fs = hy.m_frequency_from_polarizations(np.real(h2),np.imag(h2),delta_t)	
