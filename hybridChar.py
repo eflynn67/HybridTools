@@ -157,7 +157,6 @@ if __name__ == '__main__':
                                 hybridPN_Num = hy.hybridize(h1,h1_ts,h2,h2_ts,match_i=0,match_f=l,delta_t=delta_t,M=300,info=1)
                                 shift_times.append(hybridPN_Num[6])
                                 hh_freqs.append(h1_fs[hybridPN_Num[1]])
-                                h5file= path_name_data+name+'_'+sim_name+'.h5'
                                 f_low_M = f_low * (lal.TWOPI * total_mass * lal.MTSUN_SI)
                                 with h5py.File(path_name_data+sim_hybrid_name+'_'+approx+'fp2_'+str(l)+'.h5','w') as fd:
                                     mchirp, eta = pnutils.mass1_mass2_to_mchirp_eta(m_1, m_2)

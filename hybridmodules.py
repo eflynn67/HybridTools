@@ -189,10 +189,12 @@ def hybridize(h1,h1_ts,h2,h2_ts,match_i,match_f,delta_t=1/4096.0,M=200,info=0):
 	hybrid_hp = np.concatenate((h1_hp_split,mix_hp,np.real(h2_phase_shift[match_i+off_len:])),axis = 0)
 	hybrid_hc = np.concatenate((h1_hc_split,mix_hc,np.imag(h2_phase_shift[match_i+off_len:])),axis =0)
 	hybrid = (hybrid_t, hybrid_hp, hybrid_hc)
-	if info == 0:
+	freq = m_frequency_from_polarizations(hybrid_hp,hybrid_hc,delta_t=delta_t)
+        hh_freq = freq[w]
+        if info == 0:
 		return hybrid
 	if info == 1:
-		return(np.max(norm_z),w,phi,h2_phase_shift,h2_tc,hybrid,h2_tc[0])
+		return(np.max(norm_z),w,phi,h2_phase_shift,h2_tc,hybrid,h2_tc[0],hh_freq)
 	else: 
 		return 'use info = 0 or 1'
 
