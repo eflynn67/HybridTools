@@ -20,11 +20,7 @@ import hybridmodules as hy
 from functools import partial
 import random
 import romspline
-TWOPI = 2.0*np.pi
-MRSUN_SI = 1476.6250614
-PC_SI = 3.08567758149e+16
-MTSUN_SI = 4.92549102554e-06
-solar_mass_mpc = MRSUN_SI / (1e6*PC_SI)
+solar_mass_mpc = lal.MRSUN_SI / (1e6*lal.PC_SI)
 Sph_Harm = 0.6307831305 ## 2-2 spherical harmoniic at theta = 0 phi = 90 
 sample_rate = 4096.0*8
 delta_t = 1.0/sample_rate
@@ -86,7 +82,7 @@ def writeHybrid_h5(path_name_part,metadata,approx,sim_name,h1,h1_ts,h2,h2_ts,del
     shift_time = (hybridPN_Num[6],fp2)
     hh_freq = (hybridPN_Num[7],fp2)
     path_name = path_name_part+'fp2_'+str(fp2)+'.h5'
-    f_low_M = f_low * (TWOPI * total_mass * MTSUN_SI)
+    f_low_M = f_low * (lal.TWOPI * total_mass * lal.MTSUN_SI)
     with h5py.File(path_name,'w') as fd:
         mchirp, eta = pnutils.mass1_mass2_to_mchirp_eta(m1, m2)
         hashtag = hashlib.md5()
@@ -128,7 +124,7 @@ def writeHybrid_h5(path_name_part,metadata,approx,sim_name,h1,h1_ts,h2,h2_ts,del
         massMpc = total_mass*solar_mass_mpc
         hplusMpc  = pycbc.types.TimeSeries(hplus/massMpc, delta_t=delta_t)
         hcrossMpc = pycbc.types.TimeSeries(hcross/massMpc, delta_t=delta_t)
-        times_M = times / (MTSUN_SI * total_mass)
+        times_M = times / (lal.MTSUN_SI * total_mass)
         HlmAmp = wfutils.amplitude_from_polarizations(hplusMpc,hcrossMpc).data
         HlmPhase = wfutils.phase_from_polarizations(hplusMpc, hcrossMpc).data
         sAmph = romspline.ReducedOrderSpline(times_M, HlmAmp,rel=True ,verbose=False)
@@ -285,7 +281,7 @@ if __name__ == '__main__':
                     shift_time = best_hybrid[6]
                     hh_freq = best_hybrid[7]
                     long_hybrid_name = 'HybridAnnex/'+type+'/'+sim_name+'/'+approx+'/'+sim_name+'_'+approx+'ip2_'+str(best_ip2)+'fp2_'+str(best_fp2)+'_flow'+str(f_low_long)+'.h5'
-                    f_low_M = f_low_long * (TWOPI * total_mass * MTSUN_SI)
+                    f_low_M = f_low_long * (lal.TWOPI * total_mass * lal.MTSUN_SI)
                     with h5py.File(long_hybrid_name,'w') as fd:
                         mchirp, eta = pnutils.mass1_mass2_to_mchirp_eta(m1, m2)
                         hashtag = hashlib.md5()
@@ -332,7 +328,7 @@ if __name__ == '__main__':
                         massMpc = total_mass*solar_mass_mpc
                         hplusMpc  = pycbc.types.TimeSeries(hplus/massMpc, delta_t=delta_t)
                         hcrossMpc = pycbc.types.TimeSeries(hcross/massMpc, delta_t=delta_t)
-                        times_M = times / (MTSUN_SI * total_mass)
+                        times_M = times / (lal.MTSUN_SI * total_mass)
                         HlmAmp = wfutils.amplitude_from_polarizations(hplusMpc,hcrossMpc).data
                         HlmPhase = wfutils.phase_from_polarizations(hplusMpc, hcrossMpc).data
                         sAmph = romspline.ReducedOrderSpline(times_M, HlmAmp,rel=True ,verbose=False)
