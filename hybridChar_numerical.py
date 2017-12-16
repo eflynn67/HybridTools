@@ -30,13 +30,16 @@ PN_names = ['TaylorT2','TaylorT4']
 sim_paths = ['../Simulations/BNS/Haas/Haas_Reformat_rh_CceR2090_l2_m2.h5']
 ### import lambda values from simulation. here a format is assumed to the same across all sim_paths
 wave_read = h5py.File(sim_paths[0], 'r')
-lambda_initial = wave_read.attrs['lambda1']
-lambda_final = wave_read.attrs['lambda2']
+lambda_initial1 = wave_read.attrs['lambda1']
+lambda_final1 = wave_read.attrs['lambda1']
+lambda_initial2 = wave_read.attrs['lambda2']
+lambda_final2 = wave_read.attrs['lambda2']
 wave_read.close()
 
 ### set range of lambda value for PN's to compare to simulation
 delta_tidal = 1.0
-tidal_range = np.arange(lambda_initial,lambda_final+1,delta_tidal) 
+tidal_range1 = np.arange(lambda_initial1,lambda_final1+1,delta_tidal) 
+tidal_range2 = np.arange(lambda_initial2,lambda_final2+1,delta_tidal)
 ### set initial simulation starting iteration for match maximization. see documentation at https://github.com/eflynn67/HybridTools/wiki for more detail. 
 ip1 = 0
 final_start_index = 600
@@ -143,8 +146,8 @@ if __name__ == '__main__':
     p = mp.Pool(mp.cpu_count())
     for sim_path in sim_paths:
         for approx  in PN_names:
-            for tidal_1 in tidal_range:
-                for tidal_2 in tidal_range:
+            for tidal_1 in tidal_range1:
+                for tidal_2 in tidal_range2:
                     # First import parameters needed for Pycbc get_td_waveform() a numerical format is assumed. See https://github.com/eflynn67/HybridTools/wiki      
                     num = h5py.File(sim_path, 'r')
                     grav_m1 = num.attrs['grav_mass1']
