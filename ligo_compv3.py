@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import scipy as sci
 import lal
 import lalsimulation as lalsim
+import pycbc
 from pycbc.filter import matchedfilter,sigmasq,make_frequency_series
 from pycbc.psd import aLIGOZeroDetHighPower
 from pycbc.types import TimeSeries,FrequencySeries
@@ -34,9 +35,15 @@ delta_t = 1.0/sample_rate
 ##################################
 # All this program requires is the paths to the set of waveforms you want to compare.
 # NOTE: EOS1 and EOS2 are just labels. These can have the same EOS's and different approximates, different EOS's and same approximates and so on.
-hm_paths_EOS1 = glob.glob('HybridAnnex/BNS/CoRe_BAM_0004_R0*/ALF2_1.351_1.351_0.00_0.00_0.052_0.202_camr/TaylorT2/TaylorT2ip2_0_730.0804_730.0804/CoRe_BAM_0004_R0*_ALF2_TaylorT2fp2_*.h5')
-#glob.glob('HybridAnnex/BNS/CoRe_BAM_0120_R*/SLy_1.375_1.375_0.00_0.00_0.0361_0.116/TEOBResum_ROM/TEOBResum_ROMip2_0_346.063_346.063/CoRe_BAM_0120_R*_SLy_TEOBResum_ROMfp2_*.h5')
-hm_paths_EOS2 = glob.glob('HybridAnnex/BNS/CoRe_BAM_0004_R0*/ALF2_1.351_1.351_0.00_0.00_0.052_0.202_camr/TaylorT4/TaylorT4ip2_0_730.0804_730.0804/CoRe_BAM_0004_R0*_ALF2_TaylorT4fp2_*.h5')
+hm_paths_EOS1 = glob.glob('HybridAnnex/BNS/CoRe_BAM_0003_R0*/ALF2_1.350_1.350_0.00_0.00_0.038_0.246_shells/SEOBNRv4T/SEOBNRv4Tip2_0_733.345_733.345/CoRe_BAM_0003_R0*_ALF2_SEOBNRv4Tfp2_*.h5')
+#CoRe_BAM_0003_R0*/ALF2_1.350_1.350_0.00_0.00_0.038_0.246_shells/SEOBNRv4T/SEOBNRv4Tip2_0_733.345_733.345/CoRe_BAM_0003_R0*_ALF2_SEOBNRv4Tfp2_*.h5
+#CoRe_BAM_0097_R0*/SLy_1.350_1.350_0.00_0.00_0.038_0.114/SEOBNRv4T/SEOBNRv4Tip2_0_390.1104_390.1104/CoRe_BAM_0097_R0*_SLy_SEOBNRv4Tfp2_*.h5
+#CoRe_THC_0030_R0*/SFHo_1.350_1.350_0.00_0.00_0.055_0.083/SEOBNRv4T/SEOBNRv4Tip2_0_416.18582635048585_416.18582635048585/CoRe_THC_0030_R0*_SFHo_SEOBNRv4Tfp2_*.h5
+
+#CoRe_BAM_0003_R0*/ALF2_1.350_1.350_0.00_0.00_0.038_0.246_shells/TaylorT2/TaylorT2ip2_0_733.345_733.345/CoRe_BAM_0003_R0*_ALF2_TaylorT2fp2_*.h5
+#'CoRe_BAM_0097_R0*/SLy_1.350_1.350_0.00_0.00_0.038_0.114/TaylorT2/TaylorT2ip2_0_390.1104_390.1104/CoRe_BAM_0097_R0*_SLy_TaylorT2fp2_*.h5'
+#'HybridAnnex/BNS/CoRe_THC_0030_R0*/SFHo_1.350_1.350_0.00_0.00_0.055_0.083/TaylorT2/TaylorT2ip2_0_416.18582635048585_416.18582635048585/CoRe_THC_0030_R0*_SFHo_TaylorT2fp2_*.h5'
+hm_paths_EOS2 = glob.glob('HybridAnnex/BNS/CoRe_THC_0030_R0*/SFHo_1.350_1.350_0.00_0.00_0.055_0.083/SEOBNRv4T/SEOBNRv4Tip2_0_416.18582635048585_416.18582635048585/CoRe_THC_0030_R0*_SFHo_SEOBNRv4Tfp2_*.h5')
 
 #glob.glob('HybridAnnex/BNS/CoRe_BAM_0005_R*/ALF2_1.375_1.375_0.00_0.00_0.0360_0.167/TaylorT2/TaylorT2ip2_0_658.1463_658.1463/CoRe_BAM_0005_R*_ALF2_TaylorT2fp2_*.h5')
 distance = 100.0 #in Mpc
@@ -58,7 +65,7 @@ def _poolinit():
     mp.util.Finalize(None,finish,exitpriority = 1)
 
 def compare(psd,psd_path,hep,hec,distance,f_low,f_high,approx_e,EOS_e,hm_path): 
-    if psd == 'aLIGOZeroDetHighPower':
+    if psd_type == 'aLIGOZeroDetHighPower':
         inclination = 0.0
         hhm = h5py.File(hm_path, 'r')
         EOS_m = hhm.attrs['EOS']
@@ -105,7 +112,7 @@ def compare(psd,psd_path,hep,hec,distance,f_low,f_high,approx_e,EOS_e,hm_path):
         mismatch = 1.0 - overlap
         data = (l2_distance,hep_hmp_match,overlap,mismatch,hmp_norm,h_matchm,hhm_shift_time,hhe_freq,hhm_freq,approx_e,approx_m,EOS_e,EOS_m,sim_name)
         return data
-    elif psd != 'aLIGOZeroDetHighPower':
+    elif psd_type != 'aLIGOZeroDetHighPower':
         # similar to previous section
         inclination = 0.0
         hhm = h5py.File(hm_path, 'r')
@@ -142,7 +149,7 @@ def compare(psd,psd_path,hep,hec,distance,f_low,f_high,approx_e,EOS_e,hm_path):
         delta_f = 1.0 /hmp.duration
         f_len = t_len/2 + 1
         ### reads in a custom psd file
-        psd = pycbc.psd.read.from_txt(psd_path, f_len, delta_f, f_cutoff, is_asd_file=True) 
+        psd = pycbc.psd.read.from_txt(psd_path, f_len, delta_f, f_low, is_asd_file=True) 
         l2_distance = hy.delta_h(hep,hmp)
         hep_hmp_match,index = matchedfilter.match(hep,hmp,psd=psd,low_frequency_cutoff=f_low,high_frequency_cutoff=f_high) 
         hmp_norm = matchedfilter.sigmasq(hmp,psd=psd,low_frequency_cutoff=f_low, high_frequency_cutoff=f_high) 
@@ -333,6 +340,8 @@ if __name__ == '__main__':
         print sigma_sqr_he
         he_l2_norm = np.linalg.norm(np.array(hep))
         func_compare_EOS1 = partial(compare,psd,psd_path,hep,hec,distance,f_low,f_high,approx_he,approx_e_EOS1)
+        print psd
+        print psd_path
         print 'starting comparisons'
         comparisons_res_EOS1 = p.map(func_compare_EOS1,hm_paths_EOS1)    
 ###return(l2_distance,hep_hmp_match,overlap,mismatch,hmp_norm,h_matchm,hhm_shift_time,hhe_freq,hhm_freq,approx_e,approx_m,EOS_e,EOS_m)
@@ -427,8 +436,7 @@ if __name__ == '__main__':
             sys.exit('ERROR: enter vaild psd type')
         sigma_sqr_he = matchedfilter.sigmasq(hep,psd=psd,low_frequency_cutoff=f_low, high_frequency_cutoff=f_high)
         he_l2_norm = np.linalg.norm(np.array(hep))
-        func_compare_EOS1 = partial(compare,hep,hec,distance,f_low,f_high,approx_he,approx_e_EOS1) 
-        func_compare_EOS1 = partial(compare,hep,hec,distance,f_low,f_high,approx_he,approx_e_EOS1)
+        func_compare_EOS1 = partial(compare,psd,psd_path,hep,hec,distance,f_low,f_high,approx_he,approx_e_EOS1) 
         for key in dict(d_EOS1.items()[1:]):
             hm_paths_EOS1.append(he_paths_EOS1[key])    
         print 'hm_paths_eos1', hm_paths_EOS1
@@ -513,7 +521,7 @@ if __name__ == '__main__':
             sys.exit('ERROR: enter vaild psd type') 
         sigma_sqr_he = matchedfilter.sigmasq(hep,psd=psd,low_frequency_cutoff=f_low, high_frequency_cutoff=f_high)
         he_l2_norm = np.linalg.norm(np.array(hep))
-        func_compare_EOS2 = partial(compare,hep,hec,distance,f_low,f_high,approx_he,approx_e_EOS2)
+        func_compare_EOS2 = partial(compare,psd,psd_path,hep,hec,distance,f_low,f_high,approx_he,approx_e_EOS2)
         print 'starting comparisons'
         comparisons_res_EOS2 = p.map(func_compare_EOS2,hm_paths_EOS2)    
 ###return(l2_distance,hep_hmp_match,overlap,mismatch,hmp_norm,h_matchm,hhm_shift_time,hhe_freq,hhm_freq,approx_e,approx_m,EOS_e,EOS_m)
@@ -601,7 +609,7 @@ if __name__ == '__main__':
             sys.exit('ERROR: enter vaild psd type')
         sigma_sqr_he = matchedfilter.sigmasq(hep,psd=psd,low_frequency_cutoff=f_low, high_frequency_cutoff=f_high)
         he_l2_norm = np.linalg.norm(np.array(hep))
-        func_compare_EOS2 = partial(compare,hep,hec,distance,f_low,f_high,approx_he,approx_e_EOS2)
+        func_compare_EOS2 = partial(compare,psd,psd_path,hep,hec,distance,f_low,f_high,approx_he,approx_e_EOS2)
         for key in dict(d_EOS2.items()[1:]):
             hm_paths_EOS2.append(he_paths_EOS2[key])    
         print 'starting comparisons'
@@ -663,7 +671,7 @@ if __name__ == '__main__':
             ### multiply by stupid pycbc factor
             hep1 = hep1*pycbc_factor
             hec1 = hec1*pycbc_factor
-            EOS1_EOS2_compare = compare(hep1,hec1,distance,f_low,f_high,approx_he,approx_e_EOS1,he_EOS2_path) 
+            EOS1_EOS2_compare = compare(psd,psd_path,hep1,hec1,distance,f_low,f_high,approx_he,approx_e_EOS1,he_EOS2_path) 
             l2_norm_EOS2.append(EOS1_EOS2_compare[0])
             match_filter_EOS2.append(EOS1_EOS2_compare[1])
             overlap_EOS2.append(EOS1_EOS2_compare[2])
@@ -674,5 +682,6 @@ if __name__ == '__main__':
             h_hybridize_freq_EOS2.append(EOS1_EOS2_compare[8][0])
             sim_names.append(EOS1_EOS2_compare[13])    
             res_data = np.transpose([l2_norm_EOS2,match_filter_EOS2,overlap_EOS2,mismatch_EOS2,h_norm_EOS2,h_match_EOS2,h_shift_time_EOS2,h_hybridize_freq_EOS2,sim_names])
+            print res_data,'model1_model2_comparisons'
             with h5py.File(h5_dir+'.h5','a') as fd:
                 fd.create_dataset('model1_model2_compare',data=res_data)  

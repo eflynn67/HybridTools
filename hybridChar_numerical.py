@@ -30,7 +30,7 @@ MRSUN_SI = 1476.6250614
 PC_SI = 3.08567758149e+16
 MTSUN_SI = 4.92549102554e-06
 solar_mass_mpc = MRSUN_SI / (1e6*PC_SI)
-Sph_Harm = 0.6307831305 ## 2-2 spin weighted spherical harmoniic at theta = 0 phi = 90 
+Sph_Harm = 0.6307831305 ## 2-2 spherical harmoniic at theta = 0 phi = 90 
 #################################
 # Define Sample rate
 sample_rate = 4096.0*8.0
@@ -42,10 +42,13 @@ delta_t = 1.0/sample_rate
 ##################################
 ### First, input the names of the pycbc approximates you want to hybridize. Must be in the form [string1, string2,....]
 
-PN_names = ['TaylorT1','TaylorT2','TaylorT4','SEOBNRv4T','TEOBResum_ROM'] ## TaylorT1,TaylorT2,TaylorT3,TaylorT4,SEOBNRv4T,TEOBResum_ROM,IMRPhenomD_NRTidal,IMRPhenomPv2_NRTidal
+PN_names = ['SEOBNRv4T'] ## TaylorT1,TaylorT2,TaylorT3,TaylorT4,SEOBNRv4T,TEOBResum_ROM,IMRPhenomD_NRTidal,IMRPhenomPv2_NRTidal
 ### names of the simulations you want to use. glob is useful since you can grab all resolutions of a single simulation using a wildcard (*). 
 ### It is assumed that all numerical simulations are in the pycbc numerical injection format.  
-sim_paths = glob.glob('/home/ericf2/Simulations/BNS/CoRe/unsorted/CoRe_BAM_0004_R0*_r01000.h5') 
+### CoRe_THC_0030_R0*_r00400.h5
+### CoRe_BAM_0097_R0*_r00850.h5
+### CoRe_BAM_0003_R0*_r00900.h5
+sim_paths = glob.glob('/home/ericf2/Simulations/BNS/CoRe/unsorted/CoRe_BAM_0003_R0*_r00900.h5')
 ### grab physical parameters from simulation.
 wave_read = h5py.File(sim_paths[0], 'r')
 lambda_1 = wave_read.attrs['tidal-lambda1-l2'] 
@@ -55,7 +58,7 @@ EOS = wave_read.attrs['EOS-name']
 grav_m1 = wave_read.attrs['mass1-msol'] 
 grav_m2 = wave_read.attrs['mass2-msol'] 
 bary_m1 = 0.0#wave_read.attrs['baryon-mass1']
-bary_m2 = 0.0#wave_read.attrs['baryon-mass2'] # sometimes these are not given with the simulation. just set to 0 if they are not given.
+bary_m2 = 0.0#wave_read.attrs['baryon-mass2']
 total_mass = grav_m1 + grav_m2 
 m1 = wave_read.attrs['mass1']
 m2 = wave_read.attrs['mass2']
@@ -71,12 +74,12 @@ s2x = spins[3]
 s2y = spins[4]
 s2z = spins[5]
 ### orbital angular momentum vectors (LNhat) and separation vectors (nhat) are simulation metadata. We import it in here so we can write it in the hybrid metadata
-LNhatx = wave_read.attrs['LNhatx']
-LNhaty = wave_read.attrs['LNhaty']
-LNhatz = wave_read.attrs['LNhatz']
-n_hatx = wave_read.attrs['nhatx']
-n_haty = wave_read.attrs['nhaty']
-n_hatz = wave_read.attrs['nhatx']
+LNhatx = 0.0#wave_read.attrs['LNhatx']
+LNhaty = 0.0#wave_read.attrs['LNhaty']
+LNhatz = 1.0#wave_read.attrs['LNhatz']
+n_hatx = 1.0#wave_read.attrs['nhatx']
+n_haty = 0.0#wave_read.attrs['nhaty']
+n_hatz = 0.0#wave_read.attrs['nhatx']
 #delta_tidal = 1.0
 ### we can create a set of hybrids with different tidal parameter values. If you want a single lambda, just input a single number into the array.
 tidal_range1 = [lambda_1] #### code is set to iterate over lamba values so these need to be in arrays or lists
@@ -89,7 +92,7 @@ starting_index = [0]
 ### we can create hybrids with different numerical simulation starting points. Since we are treating the junk radiation using treat_junk() from hybrid modules, we tend not iterate 
 ### over this parameter by just setting starting index to [0] (i.e no changes in starting point).
 match_i = 0 ### dummy parameter for the beginning window index for the numerical. Used for python multi-processing.
-type = 'BNS' # type of binary system we are hybridizing
+type_sim = 'BNS' # type of binary system we are hybridizing
 f_low = 60 # lower frequency bound for short hybrids. Short hybrids are used for distinguishability and characteristics checks 
 f_low_long = 60 # lower frequency for best hybrid. if you do not want to make a long hybrid, set this parameter to string 'None'
 distance = 1.0 ### in Mpcs.
@@ -122,12 +125,12 @@ def writeHybrid_h5(path_name_part,metadata,approx,sim_name,h1,h1_ts,h2,h2_ts,del
     LNhatx = metadata[4][0]
     LNhaty = metadata[4][1]
     LNhatz = metadata[4][2]
-    n_hatx = metadata[5][0]
-    n_haty = metadata[5][1]
-    n_hatz = metadata[5][2]
+    n_hatx = 1.0#metadata[5][0]
+    n_haty = 0.0#metadata[5][1]
+    n_hatz = 0.0#metadata[5][2]
     tidal_1 = metadata[6][0]
     tidal_2 = metadata[6][1]
-    type = metadata[7]
+    type_sim = metadata[7]
     f_low = metadata[8]
     EOS = metadata[9]
     f_low_num = metadata[10]
@@ -143,7 +146,7 @@ def writeHybrid_h5(path_name_part,metadata,approx,sim_name,h1,h1_ts,h2,h2_ts,del
     f_low_M = f_low * (TWOPI * total_mass * MTSUN_SI)
     with h5py.File(path_name,'w') as fd:
         mchirp, eta = pnutils.mass1_mass2_to_mchirp_eta(grav_m1, grav_m2)
-        fd.attrs['type'] = 'Hybrid:%s'%type
+        fd.attrs['type'] = 'Hybrid:%s'%type_sim
         fd.attrs['hgroup'] = 'Read_CSUF'
         fd.attrs['Format'] = 1
         fd.attrs['Lmax'] = 2
@@ -160,9 +163,9 @@ def writeHybrid_h5(path_name_part,metadata,approx,sim_name,h1,h1_ts,h2,h2_ts,del
         fd.attrs['LNhatx'] = LNhatx
         fd.attrs['LNhaty'] = LNhaty
         fd.attrs['LNhatz'] = LNhatz
-        fd.attrs['nhatx'] = n_hatx
-        fd.attrs['nhaty'] = n_haty
-        fd.attrs['nhatz'] = n_hatz
+        fd.attrs['nhatx'] = 1.0#n_hatx
+        fd.attrs['nhaty'] = 0.0#n_haty
+        fd.attrs['nhatz'] = 0.0#n_hatz
         fd.attrs['mass1'] = m1
         fd.attrs['mass2'] = m2
         fd.attrs['grav_mass1'] = grav_m1
@@ -226,8 +229,8 @@ if __name__ == '__main__':
         for approx  in PN_names:
             for tidal_1 in tidal_range1:
                 for tidal_2 in tidal_range2:                        
-                    match_funcs = [] # empty array to attach arrays of match_values that have first two_cycles worth of match data from match_generator_num() removed. 
-                    matches_maxima = [] # emptry array to attach the maximum match for each ip2 value. 
+                    match_funcs = [] # empty array to attach arrays of match_values that have first two_cycles worth of numerical data from match_generator_num() removed. 
+                    matches_area = [] # empty array to attach the integrals of the match vs time_slice curve above match threshold.
                     # first generate approximate 
                     PN_model = hy.getApprox('pycbc',approx,m1=grav_m1,m2=grav_m2,f_ref=0.0,f_low=f_low,distance=distance,delta_t=delta_t,
                                 s1x=s1x,s1y=s1y,s1z=s1z,s2x=s2x,s2y=s2y,s2z=s2z,inclination=inclination,tidal1=tidal_1,tidal2=tidal_2)
@@ -241,7 +244,7 @@ if __name__ == '__main__':
                     sim_name = num_metadata[i][3] 
                     sim_name = sim_name.replace(':','_') # sometimes the simulations have : in their names. this fucks with the file paths
                     # metadata to pass to the  writeHybrid_h5() function defined above
-                    metadata = [(grav_m1,grav_m2),(bary_m1,bary_m2),(m1,m2),(s1x,s1y,s1z,s2x,s2y,s2z),(LNhatx,LNhaty,LNhatz),(n_hatx,n_haty,n_hatz),(tidal_1,tidal_2),type,f_low,EOS, starting_freq]
+                    metadata = [(grav_m1,grav_m2),(bary_m1,bary_m2),(m1,m2),(s1x,s1y,s1z,s2x,s2y,s2z),(LNhatx,LNhaty,LNhatz),(n_hatx,n_haty,n_hatz),(tidal_1,tidal_2),type_sim,f_low,EOS, starting_freq]
                     for ip2 in starting_index:
                         #if multiple ip2 values are given in starting_index array, this section finds the ip2 that produces the highest maximum match for a particular fp2
                         best_numz_indices = [] # empty array to place the indices corresponding t the time slice that produces the high match
@@ -249,7 +252,7 @@ if __name__ == '__main__':
                         window_index = []
                         match_fp2 = []    
                         best_PNz_indices = []
-                        path_name_data = 'HybridAnnex/'+type+'/'+sim_name+'/'+file_label+'/'+approx+'/'+approx+'ip2_'+str(ip2)+'_'+str(tidal_1)+'_'+str(tidal_2)+'/'
+                        path_name_data = 'HybridAnnex/'+type_sim+'/'+sim_name+'/'+file_label+'/'+approx+'/'+approx+'ip2_'+str(ip2)+'_'+str(tidal_1)+'_'+str(tidal_2)+'/'
 			h2 = h2_full[ip2:]
                         h2_ts = h2_ts_full[ip2:]
                         h2_fs = full_freq[ip2:]
@@ -276,9 +279,8 @@ if __name__ == '__main__':
                             window_index.append(data[2])
                         match_fp2 = np.array(match_fp2)
                         match_fp1 = np.array(match_fp1)
-                        
-                        match_max_fp2 = np.max(match_fp2[two_osc_index[1]:]) 
-                        matches_maxima.append(match_max_fp2)
+                        match_area_fp2 = sci.integrate.trapz(match_fp2,h2_ts) 
+                        matches_area.append(match_area_fp2)
                         
                         match_funcs.append(match_fp2[two_osc_index[1]:])
                         # find the region of matches that are higher than match_lower 
@@ -309,52 +311,50 @@ if __name__ == '__main__':
                                     raise 
                         with h5py.File(path_name_data+'HybridChars.h5','w') as fd:
                             fd.attrs.create('group', 'GWPAC')
-                            fd.attrs.create('type', 'Hybrid:%s'%type)
-                            fd.attrs.create('approx', approx) # name of the approximate used. coming PN_names
-                            fd.attrs.create('sim_name', sim_name) # name of the simulation
-                            fd.attrs.create('ip2',ip2) # the starting index of the numerical waveform
-                            fd.attrs.create('num_start_freq',starting_freq) # the starting frequency used for the characteristics 
-                            fd.create_dataset('match_PN_fp', data=match_fp1) # the final indices used for PN_matches
-                            fd.create_dataset('match_num_fp', data=match_fp2) # the final indices used for num_matches
-                            fd.create_dataset('hybridize_freq',data=hh_freqs) # the hybridization frequencies as a function of fp2
-                            fd.create_dataset('window_index',data=window_index) # where the window function is being placed
-                            fd.create_dataset('time_slices',data=h2_ts) # time slices. essentially the time series of the numerical
-                            fd.create_dataset('freq_slices',data=h2_fs) # instantaneous frequency slices of the numerical.
-                            fd.create_dataset('tidal_rangeA',data=tidal_range1) # tidal parameters used 
+                            fd.attrs.create('type', 'Hybrid:%s'%type_sim)
+                            fd.attrs.create('approx', approx)
+                            fd.attrs.create('sim_name', sim_name)
+                            fd.attrs.create('ip2',ip2)
+                            fd.attrs.create('num_start_freq',starting_freq)
+                            fd.create_dataset('match_PN_fp', data=match_fp1)
+                            fd.create_dataset('match_num_fp', data=match_fp2)
+                            fd.create_dataset('hybridize_freq',data=hh_freqs)
+                            fd.create_dataset('window_index',data=window_index)
+                            fd.create_dataset('time_slices',data=h2_ts)
+                            fd.create_dataset('freq_slices',data=h2_fs)
+                            fd.create_dataset('tidal_rangeA',data=tidal_range1)
                             fd.create_dataset('tidal_rangeB',data=tidal_range2)
-                            fd.create_dataset('bestFreqRange_sim',data=freq_range_num) # best frequency range for hybridizing based on match_lower threshold
-                            fd.create_dataset('bestTimeRange_sim',data=time_range_num) # best time range for hybridizing based on match_lower threshold.
-                            fd.create_dataset('bestFreqRange_approx',data=freq_range_PN) # best freq range for hybridzing using PN_match_generator
-                            fd.create_dataset('bestTimeRange_approx',data=time_range_PN) # best time range for hybrizing using num_match_generator
+                            fd.create_dataset('bestFreqRange_sim',data=freq_range_num)
+                            fd.create_dataset('bestTimeRange_sim',data=time_range_num)
+                            fd.create_dataset('bestFreqRange_approx',data=freq_range_PN)
+                            fd.create_dataset('bestTimeRange_approx',data=time_range_PN)
                             fd.close()
-                        # now randomly sample from the selected region above the match_lower threshold.
                         if len(best_numz_indices[two_osc_index[1]:])>num_hybrids:
                             index_choices = random.sample(best_numz_indices[two_osc_index[1]:],num_hybrids)
                         else:
                             index_choices = best_numz_indices[two_osc_index[1]:]
                         path_name_part = path_name_data+sim_name+'_'+EOS+'_'+approx 
                         path_name_part = path_name_part.replace(':','_')
-                        #now write all of the short hybrids. this uses multiple processors
 			func_writeHybrid_h5 = partial(writeHybrid_h5,path_name_part,metadata,approx,sim_name,h1,h1_ts,h2,h2_ts,delta_t,ip2)
                         print index_choices
                         hh_times_freqs=p.map(func_writeHybrid_h5,index_choices)
                     if f_low_long != 'None':
 #### now make a really long hybrid with highest match
-                        best_ip2 = starting_index[np.argmax(matches_maxima)] 
-                        best_fp2 = np.argmax(np.array(match_funcs[np.argmax(matches_maxima)]))   
-                        print best_ip2,'ip2'
-                        print best_fp2,'fp2'
+                        best_ip2 = starting_index[np.argmax(matches_area)] 
+                        best_fp2 = np.argmax(np.array(match_funcs[np.argmax(matches_area)]))   
+                        #print best_ip2,'ip2'
+                        #print best_fp2,'fp2'
                         long_PN = hy.getApprox('pycbc',approx,m1=grav_m1,m2=grav_m2,f_ref=0.0,f_low=f_low_long,distance=distance,delta_t=delta_t,
                                                 s1x=s1x,s1y=s1y,s1z=s1z,s2x=s2x,s2y=s2y,s2z=s2z,inclination=inclination,tidal1=tidal_1,tidal2=tidal_2)
                         best_hybrid = hy.hybridize(long_PN[1],long_PN[0],h2[best_ip2:],h2_ts[best_ip2:],match_i=0,match_f=best_fp2,delta_t=delta_t,M=300,info=1)
                         shift_time = best_hybrid[6]
                         hh_freq = best_hybrid[7]
-                        long_hybrid_name = 'HybridAnnex/'+type+'/'+sim_name+'/'+file_label+'/'+approx+'/'+sim_name+'_'+EOS+'_'+approx+'ip2_'+str(best_ip2)+'fp2_'+str(best_fp2)+'_flow'+str(f_low_long)+'.h5'
+                        long_hybrid_name = 'HybridAnnex/'+type_sim+'/'+sim_name+'/'+file_label+'/'+approx+'/'+sim_name+'_'+EOS+'_'+approx+'ip2_'+str(best_ip2)+'fp2_'+str(best_fp2)+'_flow'+str(f_low_long)+'.h5'
                         f_low_M = f_low_long * (TWOPI * total_mass * MTSUN_SI)
                         with h5py.File(long_hybrid_name,'w') as fd:
                             mchirp, eta = pnutils.mass1_mass2_to_mchirp_eta(grav_m1, grav_m2)
                             hashtag = hashlib.md5()
-                            fd.attrs['type'] = 'Hybrid:%s'%type
+                            fd.attrs['type'] = 'Hybrid:%s'%type_sim
                             hashtag.update(fd.attrs['type'])
                             fd.attrs['hashtag']  = hashtag.digest()
                             fd.attrs['group'] = 'GWPAC'
@@ -410,3 +410,32 @@ if __name__ == '__main__':
                             fd.close()
                     else:
                         break        
+'''
+#end_time = (time.time() - start_time)/60.0
+#print 'end_time (mins)', end_time
+                            print 'saving plots'
+                            with PdfPages(path_name_data+'match_v_maxSimTime.pdf') as pdf:
+                                plt.plot(h2[0], match_fp2)
+                                plt.legend(loc='best')
+                                plt.title('Match vs. Max Simulation Time Window')
+                                plt.xlabel('Time Slice (seconds)')
+                                plt.ylabel('Match')
+                                pdf.savefig()
+                                plt.clf()
+                            with PdfPages(path_name_data+'match_v_freq_range.pdf') as pdf:
+                                plt.plot(h2_fs, match_fp2)
+                                plt.legend(loc='best')
+                                plt.title('Match vs. Mac Frequency Window')
+                                plt.xlabel('Frequency slice (Hz)')
+                                plt.ylabel('Match')
+                                pdf.savefig()
+                                plt.clf()
+                            with PdfPages(path_name_data+'match_v_shift_time.pdf') as pdf
+                                plt.plot(h2_fs, match_fp2)
+                                plt.legend(loc='best')
+                                plt.title('Match vs. Mac Frequency Window')
+                                plt.xlabel('Frequency slice (Hz)')
+                                plt.ylabel('Match')
+                                pdf.savefig()
+                                plt.clf()
+'''          
